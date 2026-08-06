@@ -1,0 +1,3079 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Fratello App",
+  "schemaVersion": 1,
+  "description": "Prototipo navegable de la app Fratello (casa de repuestos, Córdoba), v3 rediseñada. Home con tres accesos: diagnóstico con mecánico (triage por síntoma → matching por especialidad → pedido de repuestos → cierre por WhatsApp), solo repuestos (cotización directa de mostrador por patente) y auxilio 24 h (SOS con tipo de emergencia, despacho de móvil, ETA y seguimiento). Incluye login por patente con tarjeta verde, ranking de lealtad de mecánicos y ficha de clientes. Tres roles: cliente, mecánico y panel interno.",
+  "mcpTools": [],
+  "mcpServerNames": []
+}
+</script>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fratello — Clientes</title>
+<style>
+:root{
+  --ink:#111820; --ink-2:#37424F; --ink-3:#6B7785;
+  --line:#E3E8EE; --line-2:#F0F3F7;
+  --bg:#EEF1F5; --surface:#FFFFFF; --surface-2:#F7F9FB;
+  --brand:#D42027; --brand-dark:#9E1218; --brand-soft:#FCEBEA;
+  --navy:#16304E; --wa:#25D366; --wa-dark:#128C7E; --wa-bubble:#DCF8C6;
+  --ok:#12704A; --ok-soft:#E6F4EE;
+  --warn:#9A5B06; --warn-soft:#FDF3E2;
+  --crit:#A72B1E; --crit-soft:#FCEDEB;
+  --info:#1B5E93; --info-soft:#E8F1F8;
+  --r:14px; --r-sm:9px;
+  --sh:0 1px 2px rgba(16,24,40,.05), 0 6px 20px -8px rgba(16,24,40,.14);
+  --sh-lg:0 24px 60px -20px rgba(16,24,40,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit;text-align:left}
+input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+
+.demobar{position:sticky;top:0;z-index:100;background:var(--ink);color:#fff;display:flex;align-items:center;
+  gap:14px;padding:9px 18px;flex-wrap:wrap}
+.demobar .tag{font-size:10px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;background:var(--brand);padding:3px 8px;border-radius:4px}
+.demobar .lbl{font-size:12.5px;color:#A9B4C2}
+.rolesw{display:flex;background:rgba(255,255,255,.08);border-radius:8px;padding:3px;gap:2px}
+.rolesw button{padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;color:#B9C3CF;transition:all .15s;white-space:nowrap;text-align:center}
+.rolesw button:hover{color:#fff}
+.rolesw button.on{background:#fff;color:var(--ink)}
+.demobar .spacer{flex:1}
+.demobar .reset{font-size:12px;color:#8E9AA8;text-decoration:underline;text-underline-offset:2px}
+.demobar .reset:hover{color:#fff}
+
+.stage{padding:28px 18px 60px;display:flex;justify-content:center}
+.phone{width:392px;max-width:100%;background:var(--surface);border-radius:26px;box-shadow:var(--sh-lg);
+  overflow:hidden;display:flex;flex-direction:column;min-height:740px}
+.phone-status{height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  font-size:10.5px;color:var(--ink-3);font-weight:600}
+.desk{width:100%;max-width:1240px}
+
+.appbar{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line);
+  background:var(--surface);position:sticky;top:0;z-index:20}
+.appbar .back{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--ink-2);font-size:19px;flex-shrink:0}
+.appbar .back:hover{background:var(--surface-2)}
+.appbar h1{font-size:16px;font-weight:700;letter-spacing:-.01em;flex:1;line-height:1.25}
+.appbar .sub{font-size:11.5px;color:var(--ink-3);font-weight:500;display:block;margin-top:1px}
+.logo{display:flex;align-items:center;gap:9px}
+.logo .mark{width:30px;height:30px;border-radius:8px;background:var(--brand);color:#fff;display:grid;
+  place-items:center;font-weight:800;font-size:15px;letter-spacing:-.03em}
+.logo .name{font-weight:800;font-size:17px;letter-spacing:-.02em}
+.logo .name small{display:block;font-size:9px;font-weight:600;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;margin-top:-2px}
+.body{flex:1;overflow-y:auto;background:var(--surface)}
+.pad{padding:18px}
+
+.hero{background:linear-gradient(155deg,var(--navy) 0%,#0C1E33 100%);color:#fff;padding:26px 20px 24px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;right:-45px;top:-45px;width:180px;height:180px;border-radius:50%;background:rgba(212,32,39,.17)}
+.hero .eyebrow{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);position:relative;margin-bottom:9px}
+.hero h2{font-size:23px;font-weight:800;letter-spacing:-.025em;line-height:1.18;position:relative}
+.hero p{font-size:13.5px;color:#B4C3D4;margin-top:9px;position:relative;line-height:1.5}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 18px;
+  border-radius:11px;font-weight:700;font-size:14.5px;transition:all .15s;text-align:center}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:0 3px 12px rgba(212,32,39,.32)}
+.btn-primary:hover{background:var(--brand-dark)}
+.btn-primary:disabled{background:#C9D0D8;color:#fff;box-shadow:none;cursor:not-allowed}
+.btn-ghost{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
+.btn-ghost:hover{background:var(--line-2)}
+.btn-wa{background:var(--wa);color:#053B26;box-shadow:0 3px 12px rgba(37,211,102,.3)}
+.btn-wa:hover{filter:brightness(.94)}
+.btn-ok{background:var(--ok);color:#fff}
+.btn-sm{padding:9px 14px;font-size:13px;border-radius:8px;width:auto}
+
+.sect{padding:22px 18px;border-top:8px solid var(--bg)}
+.sect h3{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px}
+.step-i{display:flex;gap:13px;padding:9px 0;align-items:flex-start}
+.step-i .n{width:25px;height:25px;border-radius:50%;background:var(--brand-soft);color:var(--brand);
+  display:grid;place-items:center;font-weight:800;font-size:12px;flex-shrink:0;margin-top:1px}
+.step-i .t{font-weight:650;font-size:14px}
+.step-i .d{font-size:12.5px;color:var(--ink-3);margin-top:1px;line-height:1.45}
+
+/* TRIAGE */
+.symgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sym{border:1.5px solid var(--line);border-radius:13px;padding:15px 12px;background:var(--surface);
+  transition:all .15s;text-align:center}
+.sym:hover{border-color:var(--brand);background:var(--brand-soft);transform:translateY(-1px)}
+.sym .si{font-size:26px;display:block;margin-bottom:7px}
+.sym .st2{font-weight:750;font-size:13.5px;letter-spacing:-.01em;line-height:1.25}
+.sym .ss{font-size:11px;color:var(--ink-3);margin-top:4px;line-height:1.35}
+.qopt{border:1.5px solid var(--line);border-radius:11px;padding:13px 15px;margin-bottom:9px;
+  background:var(--surface);transition:all .15s;width:100%;display:flex;align-items:center;gap:12px}
+.qopt:hover{border-color:var(--brand);background:var(--brand-soft)}
+.qopt.on{border-color:var(--brand);background:var(--brand-soft)}
+.qopt .qt{font-weight:650;font-size:14px;flex:1}
+.qopt .qa{color:var(--ink-3);font-size:17px}
+.qnum{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);margin-bottom:6px}
+.qq{font-size:18px;font-weight:800;letter-spacing:-.02em;line-height:1.3;margin-bottom:16px}
+
+.result{background:linear-gradient(160deg,#132B45,#0B1A2B);color:#fff;border-radius:16px;padding:22px 20px;margin-bottom:18px}
+.result .rl{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#7FA5CC}
+.result .rt{font-size:20px;font-weight:800;letter-spacing:-.025em;margin:7px 0 9px;line-height:1.22}
+.result .rd{font-size:13px;color:#B4C3D4;line-height:1.5}
+.result .rspec{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.11);
+  border-radius:9px;padding:9px 13px;margin-top:14px;font-size:13px;font-weight:700}
+
+.card{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:15px;transition:all .15s}
+.card+.card{margin-top:11px}
+.card-tap:hover{border-color:#C4CDD8;box-shadow:var(--sh)}
+.card-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.card-t{font-weight:750;font-size:14.5px;letter-spacing:-.01em}
+.card-s{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+.badge{font-size:10.5px;font-weight:750;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.b-crit{background:var(--crit-soft);color:var(--crit)}
+.b-warn{background:var(--warn-soft);color:var(--warn)}
+.b-ok{background:var(--ok-soft);color:var(--ok)}
+.b-info{background:var(--info-soft);color:var(--info)}
+.b-neutral{background:var(--surface-2);color:var(--ink-3);border:1px solid var(--line)}
+.b-match{background:var(--brand);color:#fff}
+
+.field{margin-bottom:15px}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--ink-2);margin-bottom:6px}
+.field label .opt{font-weight:500;color:var(--ink-3)}
+.inp,select.inp,textarea.inp{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:var(--r-sm);
+  background:var(--surface);font-size:14.5px;outline:none;transition:border-color .15s}
+.inp:focus{border-color:var(--brand)}
+textarea.inp{min-height:86px;resize:vertical;line-height:1.5}
+select.inp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236B7785' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.radio-row{display:flex;gap:8px}
+.radio-b{flex:1;border:1.5px solid var(--line);border-radius:var(--r-sm);padding:11px 6px;text-align:center;
+  font-size:12.5px;font-weight:650;transition:all .15s;color:var(--ink-2)}
+.radio-b.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-dark)}
+.radio-b .rb-s{display:block;font-size:10px;font-weight:500;color:var(--ink-3);margin-top:2px}
+.checkline{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--ink-2);line-height:1.45}
+.checkline input{margin-top:2px;width:16px;height:16px;accent-color:var(--brand);flex-shrink:0}
+
+.wiz{display:flex;gap:5px;padding:0 18px 4px}
+.wiz div{flex:1;height:3px;border-radius:2px;background:var(--line)}
+.wiz div.on{background:var(--brand)}
+
+.track{padding:16px 18px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.tr-i{display:flex;gap:12px;align-items:flex-start;padding:7px 0;position:relative}
+.tr-i .td{width:18px;height:18px;border-radius:50%;background:var(--line);flex-shrink:0;margin-top:2px;
+  display:grid;place-items:center;font-size:9px;color:#fff;font-weight:800;z-index:2}
+.tr-i.done .td{background:var(--ok)}
+.tr-i.now .td{background:var(--brand);box-shadow:0 0 0 4px var(--brand-soft)}
+.tr-i::before{content:'';position:absolute;left:8px;top:-8px;width:2px;height:22px;background:var(--line);z-index:1}
+.tr-i:first-child::before{display:none}
+.tr-i.done::before,.tr-i.now::before{background:var(--ok)}
+.tr-i .tt{font-size:13px;font-weight:650;color:var(--ink-3)}
+.tr-i.done .tt{color:var(--ink-2)}
+.tr-i.now .tt{color:var(--brand-dark);font-weight:750}
+.tr-i .ts{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+
+.dl{display:flex;justify-content:space-between;padding:8px 0;font-size:13.5px;gap:14px}
+.dl+.dl{border-top:1px solid var(--line-2)}
+.dl dt{color:var(--ink-3);flex-shrink:0}
+.dl dd{font-weight:650;text-align:right}
+.itemrow{display:flex;gap:11px;padding:12px 0;align-items:flex-start}
+.itemrow+.itemrow{border-top:1px solid var(--line-2)}
+.itemrow .ic{width:32px;height:32px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;font-size:15px;flex-shrink:0}
+.itemrow .in{flex:1;min-width:0}
+.itemrow .it{font-weight:650;font-size:14px}
+.itemrow .is{font-size:12px;color:var(--ink-3);margin-top:1px}
+
+.alert{border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.5;display:flex;gap:10px}
+.alert .ai{font-size:14px;flex-shrink:0;line-height:1.3}
+.a-crit{background:var(--crit-soft);color:#7A2015;border:1px solid #F3D0CC}
+.a-warn{background:var(--warn-soft);color:#6E4104;border:1px solid #F2E0C0}
+.a-info{background:var(--info-soft);color:#144B76;border:1px solid #CFE1EF}
+.a-ok{background:var(--ok-soft);color:#0C5335;border:1px solid #C8E5D8}
+.a-wa{background:#E7FBF0;color:#075E45;border:1px solid #B9EBD3}
+.alert b{font-weight:750}
+.hr{height:1px;background:var(--line);margin:16px 0}
+.muted{color:var(--ink-3);font-size:12.5px;line-height:1.5}
+
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:300;background:var(--ink);
+  color:#fff;padding:12px 20px;border-radius:11px;font-size:13.5px;font-weight:600;box-shadow:var(--sh-lg);
+  display:flex;align-items:center;gap:9px;animation:up .25s ease;max-width:90vw}
+@keyframes up{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* WHATSAPP PREVIEW */
+.wa-phone{background:#ECE5DD;border-radius:16px;overflow:hidden;box-shadow:var(--sh);border:1px solid var(--line)}
+.wa-top{background:var(--wa-dark);color:#fff;padding:11px 15px;display:flex;align-items:center;gap:11px}
+.wa-top .av{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--wa-dark);display:grid;
+  place-items:center;font-weight:800;font-size:14px}
+.wa-top .wn{font-weight:700;font-size:14px;line-height:1.2}
+.wa-top .ws{font-size:11px;opacity:.82}
+.wa-body{padding:16px 14px;min-height:120px;
+  background-image:radial-gradient(circle at 20% 30%,rgba(0,0,0,.022) 1px,transparent 1px),
+                   radial-gradient(circle at 70% 70%,rgba(0,0,0,.022) 1px,transparent 1px);
+  background-size:22px 22px}
+.wa-msg{background:var(--wa-bubble);border-radius:9px 9px 9px 2px;padding:11px 13px;font-size:13px;
+  line-height:1.55;white-space:pre-wrap;box-shadow:0 1px 1px rgba(0,0,0,.08);max-width:92%;
+  font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
+.wa-msg .wt{display:block;text-align:right;font-size:10px;color:#667781;margin-top:5px}
+
+/* DESKTOP */
+.panel{background:var(--surface);border-radius:16px;box-shadow:var(--sh-lg);overflow:hidden;
+  display:grid;grid-template-columns:216px 1fr;min-height:720px}
+.side{background:#0E1B2A;color:#96A5B6;padding:20px 0;display:flex;flex-direction:column}
+.side .logo{padding:0 20px 22px;color:#fff}
+.side .logo .name small{color:#7C8EA3}
+.side nav{display:flex;flex-direction:column;gap:2px;padding:0 10px}
+.side nav button{padding:10px 12px;border-radius:8px;font-size:13.5px;font-weight:600;display:flex;
+  align-items:center;gap:10px;transition:all .15s}
+.side nav button:hover{background:rgba(255,255,255,.06);color:#fff}
+.side nav button.on{background:var(--brand);color:#fff}
+.side .count{margin-left:auto;background:rgba(255,255,255,.14);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:750}
+.side nav button.on .count{background:rgba(0,0,0,.22)}
+.side .who{margin-top:auto;padding:16px 20px 0;border-top:1px solid rgba(255,255,255,.08);font-size:12px}
+.side .who b{color:#fff;display:block;font-size:13px}
+.main{padding:24px 26px;overflow-y:auto;background:var(--surface-2)}
+.main h2{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:3px}
+.main .lead{font-size:13px;color:var(--ink-3);margin-bottom:20px}
+table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:12px;overflow:hidden;box-shadow:var(--sh)}
+th{text-align:left;padding:11px 14px;font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-3);background:var(--surface-2);border-bottom:1px solid var(--line)}
+td{padding:12px 14px;font-size:13.5px;border-bottom:1px solid var(--line-2)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{cursor:pointer;transition:background .12s}
+tbody tr:hover{background:var(--surface-2)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--surface);border-radius:12px;padding:14px 16px;box-shadow:var(--sh)}
+.kpi .kv{font-size:24px;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.kpi .kl{font-size:11px;color:var(--ink-3);font-weight:650;margin-top:3px}
+.pcard{background:var(--surface);border-radius:12px;padding:20px;box-shadow:var(--sh);margin-bottom:16px}
+.phead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-bottom:15px;
+  border-bottom:1px solid var(--line);margin-bottom:15px}
+.phead h3{font-size:16.5px;font-weight:800;letter-spacing:-.02em}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-bottom:16px}
+.qcell{background:var(--surface-2);border-radius:9px;padding:10px 12px}
+.qcell .ql{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.qcell .qv{font-size:13.5px;font-weight:650;margin-top:2px}
+.qitem{border:1px solid var(--line);border-radius:10px;padding:13px 15px;margin-bottom:11px}
+.qitem-t{font-weight:750;font-size:14.5px}
+.optline{display:grid;grid-template-columns:96px minmax(0,1fr) 110px 104px 30px;gap:7px;align-items:center;margin-top:7px}
+.inp-sm{padding:7px 10px;font-size:13px;border:1.5px solid var(--line);border-radius:7px;width:100%;outline:none}
+.inp-sm:focus{border-color:var(--brand)}
+.linetag{display:inline-block;font-size:9.5px;font-weight:750;padding:3px 8px;border-radius:20px;text-transform:uppercase;text-align:center;width:100%}
+.optline.rec .linetag{outline:2px solid var(--brand);outline-offset:1.5px}
+/* --- agenda del taller: el turno lo da el mecánico --- */
+.dayrow{display:flex;gap:7px;overflow-x:auto;padding-bottom:5px}
+.daychip{flex:0 0 auto;border:1.5px solid var(--line);border-radius:11px;padding:9px 13px;
+  font-size:12.5px;font-weight:700;color:var(--ink-2);text-align:center;white-space:nowrap;transition:all .15s}
+.daychip.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-dark)}
+.daychip .dc-s{display:block;font-size:10px;font-weight:500;color:var(--ink-3);margin-top:1px}
+.daychip.on .dc-s{color:var(--brand-dark);opacity:.75}
+.hgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.hbtn{border:1.5px solid var(--line);border-radius:9px;padding:10px 0;font-size:12.5px;
+  font-weight:700;color:var(--ink-2);transition:all .15s}
+.hbtn.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-dark)}
+.hbtn:disabled{opacity:.32;text-decoration:line-through;cursor:not-allowed}
+.lt-primera{background:var(--navy);color:#fff}
+.lt-alternativa{background:var(--info-soft);color:var(--info)}
+.lt-economica{background:var(--surface-2);color:var(--ink-3);border:1px solid var(--line)}
+.split{display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start}
+.empty{text-align:center;padding:54px 20px;color:var(--ink-3)}
+.empty .ee{font-size:36px;margin-bottom:12px;opacity:.4}
+.mono{font-variant-numeric:tabular-nums}
+.pricenote{font-size:11px;color:var(--ink-3);text-align:center;padding:10px 0 0;font-style:italic}
+.brandgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bchip{border:1px solid var(--line);border-radius:10px;padding:11px 6px;text-align:center}
+.bchip .bn{font-weight:750;font-size:12.5px}
+.bchip .br{font-size:9.5px;color:var(--ink-3);margin-top:2px}
+@media(max-width:1000px){
+  .panel{grid-template-columns:1fr}.side{display:none}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .split{grid-template-columns:1fr}
+  .optline{grid-template-columns:1fr;gap:6px}
+}
+
+/* ==========================================================
+   v3 — CAPA DE REDISEÑO
+   Sobrescribe la base. Objetivo: jerarquía más clara,
+   profundidad real (luz desde arriba) y estados táctiles.
+   ========================================================== */
+:root{
+  --brand:#D42027; --brand-dark:#9E1218; --brand-lite:#F04438; --brand-soft:#FCEBEA;
+  --navy:#0F2740; --navy-2:#173A5E;
+  --sos:#D92D20; --sos-dark:#A81E13; --sos-soft:#FEF0EE;
+  --r:16px; --r-sm:10px; --r-lg:22px;
+  --sh:0 1px 2px rgba(15,39,64,.06), 0 8px 24px -12px rgba(15,39,64,.18);
+  --sh-md:0 2px 4px rgba(15,39,64,.06), 0 14px 34px -14px rgba(15,39,64,.26);
+  --sh-lg:0 30px 80px -28px rgba(15,39,64,.45), 0 4px 12px rgba(15,39,64,.07);
+  --ease:cubic-bezier(.22,.86,.34,1);
+}
+body{
+  font-size:15px;letter-spacing:-.005em;
+  background:
+    radial-gradient(1100px 620px at 82% -8%, rgba(212,32,39,.13), transparent 62%),
+    radial-gradient(900px 560px at 10% 4%, rgba(23,58,94,.12), transparent 58%),
+    linear-gradient(180deg,#F2F5F9 0%, #E7ECF2 100%);
+  background-attachment:fixed;
+}
+
+/* --- barra de demo, en vidrio --- */
+.demobar{
+  background:rgba(15,24,32,.86);backdrop-filter:blur(14px) saturate(160%);
+  -webkit-backdrop-filter:blur(14px) saturate(160%);
+  border-bottom:1px solid rgba(255,255,255,.08);padding:10px 20px;
+}
+.demobar .tag{background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));box-shadow:0 2px 10px rgba(212,32,39,.4)}
+.rolesw button{transition:all .18s var(--ease)}
+.rolesw button.on{box-shadow:0 2px 8px rgba(0,0,0,.28)}
+
+/* --- el teléfono --- */
+.stage{padding:34px 18px 70px}
+.phone{
+  width:400px;border-radius:34px;
+  border:1px solid rgba(255,255,255,.7);
+  box-shadow:var(--sh-lg), inset 0 1px 0 rgba(255,255,255,.9);
+  min-height:0;height:min(846px, calc(100vh - 118px));
+}
+.phone-status{height:32px;padding:0 20px;font-size:11px;position:relative;flex-shrink:0}
+.phone-status span:nth-child(2){opacity:0}
+.phone-status::after{
+  content:'';position:absolute;left:50%;top:7px;transform:translateX(-50%);
+  width:78px;height:19px;border-radius:12px;background:var(--ink);opacity:.9;
+}
+.body::-webkit-scrollbar{width:0}
+
+/* --- appbar --- */
+.appbar{
+  padding:14px 18px;background:rgba(255,255,255,.9);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(227,232,238,.9);
+}
+.appbar h1{font-size:16.5px;letter-spacing:-.022em}
+.appbar .back{border:1px solid var(--line);background:var(--surface);transition:all .16s var(--ease)}
+.appbar .back:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.logo .mark{
+  background:linear-gradient(140deg,var(--brand-lite),var(--brand-dark));
+  box-shadow:0 3px 10px rgba(212,32,39,.35), inset 0 1px 0 rgba(255,255,255,.4);
+  border-radius:9px;
+}
+
+/* --- hero --- */
+.hero{
+  padding:30px 22px 26px;
+  background:
+    radial-gradient(700px 300px at 88% -20%, rgba(212,32,39,.4), transparent 62%),
+    linear-gradient(158deg,#173A5E 0%, #0B1B2E 96%);
+}
+.hero::after{
+  right:-70px;top:-70px;width:240px;height:240px;
+  background:radial-gradient(circle,rgba(212,32,39,.34),transparent 68%);filter:blur(6px);
+}
+.hero::before{
+  content:'';position:absolute;inset:0;opacity:.5;
+  background-image:radial-gradient(rgba(255,255,255,.09) 1px,transparent 1px);
+  background-size:15px 15px;
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 72%);
+  mask-image:linear-gradient(180deg,#000,transparent 72%);
+}
+.hero h2{font-size:25px;letter-spacing:-.033em;line-height:1.14}
+.hero .eyebrow{color:#FFB08A;letter-spacing:.16em}
+.hero p{font-size:13.5px;color:#A9BDD3}
+
+/* --- LOS 3 ACCESOS --- */
+.acts{display:flex;flex-direction:column;gap:11px;padding:18px 18px 4px}
+.act{
+  position:relative;display:flex;align-items:center;gap:14px;width:100%;
+  padding:16px;border-radius:var(--r);text-align:left;
+  border:1.5px solid var(--line);background:var(--surface);
+  transition:transform .18s var(--ease), box-shadow .18s var(--ease), border-color .18s var(--ease);
+  overflow:hidden;
+}
+.act:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.act:active{transform:translateY(0) scale(.994)}
+.act .ai2{
+  width:46px;height:46px;border-radius:13px;flex-shrink:0;display:grid;place-items:center;
+  font-size:22px;background:var(--surface-2);border:1px solid var(--line);
+}
+.act .at{font-weight:800;font-size:15.5px;letter-spacing:-.02em;line-height:1.2}
+.act .ad{font-size:12.5px;color:var(--ink-3);margin-top:3px;line-height:1.4}
+.act .aa{margin-left:auto;font-size:20px;color:var(--ink-3);flex-shrink:0;transition:transform .18s var(--ease)}
+.act:hover .aa{transform:translateX(3px)}
+.act .apill{
+  position:absolute;top:0;right:0;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 10px;border-bottom-left-radius:10px;
+}
+.act-main{
+  border-color:transparent;color:#fff;
+  background:linear-gradient(135deg,var(--brand-lite) 0%, var(--brand) 46%, var(--brand-dark) 100%);
+  box-shadow:0 6px 20px -6px rgba(212,32,39,.55), inset 0 1px 0 rgba(255,255,255,.28);
+}
+.act-main:hover{box-shadow:0 12px 30px -8px rgba(212,32,39,.62), inset 0 1px 0 rgba(255,255,255,.3)}
+.act-main .ai2{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.28)}
+.act-main .ad{color:rgba(255,255,255,.87)}
+.act-main .aa{color:rgba(255,255,255,.8)}
+.act-main .apill{background:rgba(0,0,0,.22);color:#fff}
+.act-parts .ai2{background:var(--info-soft);border-color:#CFE1EF}
+.act-parts:hover{border-color:#9EC4E2}
+.act-mec{border-color:#CBD9E7;background:linear-gradient(135deg,#F7FAFD,#EDF3F9)}
+.act-mec:hover{border-color:var(--navy-2);box-shadow:0 12px 30px -10px rgba(23,58,94,.4)}
+.act-mec .ai2{background:#fff;border-color:#C6D6E6}
+.act-mec .at{color:var(--navy)}
+.act-sos{border-color:#F6C9C4;background:linear-gradient(135deg,#FFF7F6,#FEF0EE)}
+.act-sos:hover{border-color:var(--sos);box-shadow:0 12px 30px -10px rgba(217,45,32,.4)}
+.act-sos .ai2{background:#fff;border-color:#F3C4BE}
+.act-sos .at{color:var(--sos-dark)}
+.act-sos .apill{background:var(--sos);color:#fff;animation:pulse 2.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.62}}
+
+/* --- botones --- */
+.btn{border-radius:12px;transition:transform .16s var(--ease), box-shadow .16s var(--ease), background .16s}
+.btn:active:not(:disabled){transform:scale(.985)}
+.btn-primary{
+  background:linear-gradient(135deg,var(--brand-lite),var(--brand) 55%,var(--brand-dark));
+  box-shadow:0 5px 18px -5px rgba(212,32,39,.55), inset 0 1px 0 rgba(255,255,255,.26);
+}
+.btn-primary:hover:not(:disabled){box-shadow:0 10px 26px -7px rgba(212,32,39,.62);transform:translateY(-1px)}
+.btn-primary:disabled{background:#CBD3DB}
+.btn-wa{background:linear-gradient(135deg,#2FE577,#1FB457);color:#04361F;
+  box-shadow:0 5px 18px -5px rgba(37,211,102,.5), inset 0 1px 0 rgba(255,255,255,.35)}
+.btn-sos{background:linear-gradient(135deg,#F1503F,var(--sos) 55%,var(--sos-dark));color:#fff;
+  box-shadow:0 5px 20px -5px rgba(217,45,32,.6), inset 0 1px 0 rgba(255,255,255,.25)}
+.btn-sos:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 28px -7px rgba(217,45,32,.66)}
+.btn-sos:disabled{background:#CBD3DB;box-shadow:none;cursor:not-allowed}
+.btn-ghost{background:var(--surface);border:1.5px solid var(--line)}
+.btn-ghost:hover{background:var(--surface-2);border-color:#C9D2DC}
+
+/* --- tarjetas y secciones --- */
+.card{border-radius:var(--r);transition:transform .16s var(--ease), box-shadow .16s var(--ease), border-color .16s}
+.card-tap{cursor:pointer}
+.card-tap:hover{transform:translateY(-2px);box-shadow:var(--sh-md);border-color:#C4CDD8}
+.sect{border-top:9px solid rgba(15,39,64,.045)}
+.sect h3{letter-spacing:.13em;font-size:10.5px}
+.sym{border-radius:15px;padding:16px 11px;transition:all .18s var(--ease)}
+.sym:hover{transform:translateY(-3px);box-shadow:0 12px 24px -12px rgba(212,32,39,.5)}
+.sym .si{font-size:27px}
+.qopt{border-radius:13px;transition:all .16s var(--ease)}
+.qopt:hover{transform:translateX(3px)}
+.result{
+  border-radius:20px;
+  background:radial-gradient(500px 220px at 84% -10%, rgba(212,32,39,.34), transparent 62%),
+             linear-gradient(160deg,#173A5E,#0A1929);
+  box-shadow:0 18px 40px -18px rgba(11,25,41,.6);
+}
+.b-match{background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));box-shadow:0 2px 8px rgba(212,32,39,.32)}
+.alert{border-radius:12px}
+.inp:focus,.inp-sm:focus{border-color:var(--brand);box-shadow:0 0 0 3.5px rgba(212,32,39,.13)}
+.radio-b{border-radius:11px;transition:all .16s var(--ease)}
+.wiz div{transition:background .3s var(--ease)}
+
+/* --- navegación inferior --- */
+.tabbar{
+  display:flex;border-top:1px solid var(--line);background:rgba(255,255,255,.94);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:7px 6px 9px;
+}
+.tabbar button{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;
+  border-radius:11px;font-size:10px;font-weight:700;color:var(--ink-3);
+  transition:all .16s var(--ease);text-align:center;
+}
+.tabbar button .ti{font-size:18px;line-height:1}
+.tabbar button:hover{background:var(--surface-2)}
+.tabbar button.on{color:var(--brand)}
+.tabbar button.sos{color:var(--sos)}
+
+/* --- SOS / auxilio --- */
+.sos-hero{
+  padding:26px 20px 24px;color:#fff;position:relative;overflow:hidden;
+  background:radial-gradient(600px 260px at 82% -25%, rgba(255,120,90,.45), transparent 60%),
+             linear-gradient(158deg,#B8261A 0%, #6E120A 100%);
+}
+.sos-hero::after{
+  content:'';position:absolute;inset:0;opacity:.35;
+  background-image:radial-gradient(rgba(255,255,255,.13) 1px,transparent 1px);background-size:14px 14px;
+}
+.sos-hero h2{font-size:23px;font-weight:800;letter-spacing:-.03em;position:relative;line-height:1.16;z-index:2}
+.sos-hero p{font-size:13.5px;color:#FFD3CC;margin-top:8px;position:relative;z-index:2;line-height:1.5}
+.sos-hero .eyebrow{font-size:10px;font-weight:800;letter-spacing:.15em;text-transform:uppercase;
+  color:#FFB3A6;position:relative;z-index:2;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.livedot{width:7px;height:7px;border-radius:50%;background:#FF6B57;animation:ring 1.8s infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(255,107,87,.65)}70%{box-shadow:0 0 0 9px rgba(255,107,87,0)}100%{box-shadow:0 0 0 0 rgba(255,107,87,0)}}
+.emgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.emgrid .em:last-child:nth-child(odd){grid-column:1/-1}
+.em{
+  border:1.5px solid var(--line);border-radius:14px;padding:15px 12px;background:var(--surface);
+  text-align:center;transition:all .18s var(--ease);width:100%;
+}
+.em:hover{border-color:var(--sos);background:var(--sos-soft);transform:translateY(-2px);
+  box-shadow:0 12px 24px -14px rgba(217,45,32,.6)}
+.em.on{border-color:var(--sos);background:var(--sos-soft);box-shadow:0 0 0 3px rgba(217,45,32,.1)}
+.em .ei{font-size:26px;display:block;margin-bottom:7px}
+.em .et{font-weight:750;font-size:13.5px;letter-spacing:-.01em;line-height:1.22}
+.em .es{font-size:11px;color:var(--ink-3);margin-top:4px;line-height:1.33}
+.eta{
+  border-radius:18px;padding:20px;color:#fff;text-align:center;
+  background:linear-gradient(150deg,#173A5E,#0A1929);box-shadow:0 18px 40px -20px rgba(11,25,41,.65);
+}
+.eta .en{font-size:44px;font-weight:800;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums}
+.eta .eu{font-size:11px;color:#9FB6CE;font-weight:700;margin-top:5px;letter-spacing:.1em;text-transform:uppercase}
+.mapbox{
+  height:152px;border-radius:15px;position:relative;overflow:hidden;border:1px solid var(--line);
+  background:
+    linear-gradient(0deg,rgba(15,39,64,.05) 1px,transparent 1px) 0 0/100% 26px,
+    linear-gradient(90deg,rgba(15,39,64,.05) 1px,transparent 1px) 0 0/26px 100%,
+    linear-gradient(135deg,#EDF2F7,#DDE6EF);
+}
+.mapbox .pin{
+  position:absolute;left:50%;top:56%;transform:translate(-50%,-100%);
+  font-size:27px;filter:drop-shadow(0 4px 5px rgba(0,0,0,.28));animation:bob 2.4s ease-in-out infinite;
+}
+@keyframes bob{0%,100%{transform:translate(-50%,-100%)}50%{transform:translate(-50%,-118%)}}
+.mapbox .tow{position:absolute;top:24%;font-size:22px;animation:drive 5s linear infinite}
+@keyframes drive{0%{left:6%;opacity:0}12%{opacity:1}86%{opacity:1}100%{left:62%;opacity:0}}
+.mapbox .mlbl{
+  position:absolute;left:10px;bottom:10px;background:rgba(255,255,255,.94);border-radius:8px;
+  padding:6px 10px;font-size:11px;font-weight:700;box-shadow:var(--sh);
+}
+
+/* --- selector de rubros --- */
+.rubgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.rubb{
+  border:1.5px solid var(--line);border-radius:12px;padding:11px 5px;text-align:center;background:var(--surface);
+  transition:all .16s var(--ease);width:100%;
+}
+.rubb:hover{border-color:var(--brand);background:var(--brand-soft);transform:translateY(-2px)}
+.rubb.on{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 3px rgba(212,32,39,.1)}
+.rubb .rbi{font-size:19px;display:block}
+.rubb .rbn{font-size:10.5px;font-weight:700;margin-top:4px;line-height:1.2}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;
+  padding:5px 11px;font-size:12px;font-weight:650;background:var(--surface-2);
+}
+
+/* ==========================================================
+   CHAT INTERNO
+   Dos hilos por caso: cliente↔mostrador y taller↔mostrador.
+   Es el canal de cierre: acá viaja la cotización.
+   ========================================================== */
+.chat-wrap{display:flex;flex-direction:column;flex:1;min-height:0;background:var(--surface-2)}
+.chat-scroll{flex:1;overflow-y:auto;padding:16px 14px 8px;display:flex;flex-direction:column;gap:9px}
+.chat-scroll>*{flex-shrink:0}   /* si no, el flex comprime las burbujas al desbordar */
+.chat-scroll::-webkit-scrollbar{width:0}
+.bub{
+  max-width:82%;padding:10px 13px;border-radius:15px;font-size:13.5px;line-height:1.5;
+  box-shadow:0 1px 2px rgba(15,39,64,.07);white-space:pre-wrap;word-break:break-word;
+  animation:pop .22s var(--ease);
+}
+@keyframes pop{from{opacity:0;transform:translateY(5px) scale(.99)}to{opacity:1;transform:none}}
+.bub .bh{font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  opacity:.62;margin-bottom:4px;display:block}
+.bub .bt{display:block;text-align:right;font-size:10px;opacity:.55;margin-top:5px;font-weight:600}
+.bub b{font-weight:750}
+.b-them{align-self:flex-start;background:var(--surface);border-bottom-left-radius:4px;border:1px solid var(--line)}
+.b-me{align-self:flex-end;background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));
+  color:#fff;border-bottom-right-radius:4px;border:none;box-shadow:0 3px 12px -3px rgba(212,32,39,.45)}
+.b-me .bh{color:rgba(255,255,255,.8)}
+.b-mec{align-self:flex-start;background:#EEF4FA;border:1px solid #CFE1EF;border-bottom-left-radius:4px;color:#123A5C}
+.b-sys{
+  align-self:center;max-width:92%;text-align:center;background:transparent;box-shadow:none;
+  font-size:11.5px;color:var(--ink-3);font-weight:650;padding:3px 10px;
+}
+.b-sys span{background:var(--line-2);border-radius:20px;padding:5px 12px;display:inline-block;line-height:1.4}
+.bub .foto{
+  display:flex;align-items:center;gap:10px;background:rgba(15,39,64,.05);border-radius:10px;
+  padding:9px 11px;margin-top:7px;font-size:12px;font-weight:650;
+}
+.b-me .foto{background:rgba(255,255,255,.2)}
+.bub .foto .fi{font-size:20px}
+.cotcard{
+  border:1.5px solid var(--brand);border-radius:15px;background:var(--brand-soft);
+  padding:0;overflow:hidden;align-self:flex-start;max-width:92%;box-shadow:var(--sh);
+}
+.cotcard .cch{background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));color:#fff;
+  padding:10px 14px;font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.cotcard .ccb{padding:13px 14px;font-size:13px;line-height:1.5;white-space:pre-wrap;background:var(--surface)}
+.cotcard .bt{display:block;text-align:right;font-size:10px;color:var(--ink-3);margin-top:8px;font-weight:600}
+.chat-in{
+  display:flex;gap:8px;align-items:flex-end;padding:10px 12px;border-top:1px solid var(--line);
+  background:var(--surface);
+}
+.chat-in textarea{
+  flex:1;border:1.5px solid var(--line);border-radius:20px;padding:9px 14px;font-size:14px;
+  resize:none;min-height:40px;max-height:96px;outline:none;line-height:1.4;
+}
+.chat-in textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(212,32,39,.12)}
+.chat-in .cbtn{
+  width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:17px;flex-shrink:0;
+  border:1.5px solid var(--line);background:var(--surface);transition:all .16s var(--ease);
+}
+.chat-in .cbtn:hover{background:var(--surface-2);border-color:#C9D2DC}
+.chat-in .cbtn.send{background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));color:#fff;border:none;
+  box-shadow:0 4px 14px -4px rgba(212,32,39,.6)}
+.chat-in .cbtn.send:disabled{background:#CBD3DB;box-shadow:none;cursor:not-allowed}
+.chat-hd{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);
+  border-bottom:1px solid var(--line);
+}
+.chat-hd .cav{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:800;
+  font-size:14px;color:#fff;background:linear-gradient(140deg,var(--brand-lite),var(--brand-dark));flex-shrink:0}
+.chat-hd .cn{font-weight:750;font-size:13.5px;line-height:1.2}
+.chat-hd .cs{font-size:11px;color:var(--ink-3);margin-top:1px}
+.chat-hd .online{color:var(--ok);font-weight:700}
+.qreply{display:flex;gap:7px;flex-wrap:wrap;padding:0 12px 10px;background:var(--surface)}
+.qreply button{
+  border:1.5px solid var(--line);border-radius:20px;padding:7px 13px;font-size:12.5px;font-weight:650;
+  background:var(--surface);color:var(--ink-2);transition:all .16s var(--ease);
+}
+.qreply button:hover{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-dark)}
+
+/* chat en el panel de escritorio */
+.dchat{display:flex;flex-direction:column;height:min(640px, calc(100vh - 210px));
+  border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface-2)}
+.dtabs{display:flex;gap:3px;padding:5px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.dtabs button{flex:1;padding:8px 10px;border-radius:9px;font-size:12.5px;font-weight:700;
+  color:var(--ink-3);text-align:center;transition:all .16s var(--ease)}
+.dtabs button:hover{background:var(--line-2)}
+.dtabs button.on{background:var(--surface);color:var(--ink);box-shadow:var(--sh)}
+
+/* --- animación de entrada --- */
+.body>*{animation:fade .28s var(--ease)}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* --- panel de escritorio --- */
+.panel{border-radius:20px;box-shadow:var(--sh-lg)}
+.side{background:linear-gradient(180deg,#12283F,#0A1725)}
+.side nav button.on{background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));
+  box-shadow:0 4px 14px -4px rgba(212,32,39,.6)}
+.kpi{border-radius:14px;transition:transform .16s var(--ease),box-shadow .16s var(--ease)}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+table{border-radius:14px}
+.pcard{border-radius:16px}
+
+/* --- puerta de login unificada --- */
+.login-hero{padding:36px 22px 28px;text-align:center;color:#fff;position:relative;overflow:hidden;
+  background:radial-gradient(600px 300px at 50% -25%, rgba(212,32,39,.42), transparent 60%),
+             linear-gradient(158deg,#173A5E 0%,#0B1B2E 96%)}
+.login-hero::before{content:'';position:absolute;inset:0;opacity:.5;
+  background-image:radial-gradient(rgba(255,255,255,.09) 1px,transparent 1px);background-size:15px 15px;
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 78%);mask-image:linear-gradient(180deg,#000,transparent 78%)}
+.login-hero>*{position:relative;z-index:2}
+.login-hero .logo-xl{display:inline-flex;align-items:center;gap:12px;margin-bottom:22px}
+.login-hero .logo-xl .mark{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
+  font-weight:800;font-size:23px;color:#fff;letter-spacing:-.03em;
+  background:linear-gradient(140deg,var(--brand-lite),var(--brand-dark));
+  box-shadow:0 5px 16px rgba(212,32,39,.55), inset 0 1px 0 rgba(255,255,255,.4)}
+.login-hero .logo-xl .name{font-weight:800;font-size:23px;letter-spacing:-.025em;text-align:left;line-height:1}
+.login-hero .logo-xl .name small{display:block;font-size:8.5px;font-weight:700;letter-spacing:.16em;
+  color:#9FB6CE;text-transform:uppercase;margin-top:4px}
+.login-hero h2{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.15}
+.login-hero p{font-size:13px;color:#A9BDD3;margin-top:9px;line-height:1.5;max-width:280px;margin:9px auto 0}
+.demo-keys .dk-t{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:11px;text-align:center}
+.demo-keys .dk{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;
+  border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;background:var(--surface);
+  transition:all .16s var(--ease)}
+.demo-keys .dk:hover{border-color:var(--brand);background:var(--brand-soft);transform:translateX(3px)}
+.demo-keys .dk b{font-size:13.5px;font-weight:750}
+.demo-keys .dk span{font-size:12px;color:var(--ink-3)}
+</style>
+</head>
+<body>
+
+<div class="demobar">
+  <span class="tag">Fratello · Clientes</span>
+  <span class="lbl">Prototipo — página del cliente</span>
+  <span class="spacer"></span>
+  <button class="reset" onclick="resetDemo()">Reiniciar demo</button>
+</div>
+
+<div class="stage" id="stage"></div>
+<div id="toast-root"></div>
+
+<script>
+/* ==========================================================
+   FRATELLO v2
+   Flujo: cliente hace triage por síntoma -> la app le dice qué
+   especialista necesita -> elige mecánico -> el mecánico pide los
+   repuestos a Fratello -> Fratello arma opciones y CIERRA POR WHATSAPP.
+   ========================================================== */
+
+const ESPECIALIDADES = {
+  electrico:   {n:'Electricidad del automotor', ic:'⚡'},
+  inyeccion:   {n:'Inyección y electrónica',    ic:'💉'},
+  motor:       {n:'Mecánica de motor',          ic:'⚙️'},
+  tren_del:    {n:'Tren delantero y dirección', ic:'🎯'},
+  suspension:  {n:'Suspensión',                 ic:'🔩'},
+  frenos:      {n:'Frenos',                     ic:'🛑'},
+  transmision: {n:'Transmisión y embrague',     ic:'🌀'},
+  refrigeracion:{n:'Refrigeración',             ic:'❄️'},
+  clima:       {n:'Aire acondicionado',         ic:'🌬️'},
+  general:     {n:'Mecánica general',           ic:'🔧'},
+};
+
+/* Árbol de triage: categoría -> preguntas -> cada opción vota especialidades */
+const TRIAGE = [
+{id:'no_arranca', ic:'🔑', t:'No arranca', s:'Giro la llave y no prende',
+ qs:[
+  {q:'¿Qué pasa exactamente cuando girás la llave?', o:[
+    {t:'No hace absolutamente nada',        e:['electrico'],            u:'importante', h:'batería, borne o corte de masa'},
+    {t:'Hace un "clic" y no gira',          e:['electrico'],            u:'importante', h:'batería baja o solenoide del burro'},
+    {t:'Gira el motor pero no arranca',     e:['inyeccion','motor'],    u:'importante', h:'alimentación de combustible o encendido'},
+    {t:'Arranca y se apaga a los segundos', e:['inyeccion'],            u:'importante', h:'inmovilizador o falta de presión de nafta'},
+  ]},
+  {q:'¿Cómo están las luces del tablero?', o:[
+    {t:'Prenden normal',            e:['inyeccion']},
+    {t:'Prenden débiles o titilan', e:['electrico','electrico']},
+    {t:'No prende nada',            e:['electrico','electrico']},
+    {t:'Prenden pero con testigos raros', e:['inyeccion','electrico']},
+  ]},
+ ]},
+
+{id:'ruidos', ic:'🔊', t:'Hace ruidos raros', s:'Golpes, chillidos o zumbidos',
+ qs:[
+  {q:'¿De dónde viene el ruido?', o:[
+    {t:'De adelante, al pasar pozos',   e:['tren_del','suspension'], u:'importante', h:'tren delantero: rótulas, bujes o amortiguadores'},
+    {t:'Al frenar',                     e:['frenos'],                u:'critico',    h:'sistema de frenos'},
+    {t:'Del motor',                     e:['motor'],                 u:'importante', h:'interior del motor o accesorios'},
+    {t:'Al doblar o de una rueda',      e:['tren_del'],              u:'importante', h:'homocinética o rulemán de rueda'},
+  ]},
+  {q:'¿Cuándo lo escuchás?', o:[
+    {t:'Siempre, empeora con velocidad', e:['tren_del']},
+    {t:'Solo en pozos o lomos',          e:['suspension','suspension']},
+    {t:'Solo al frenar',                 e:['frenos','frenos']},
+    {t:'Solo en frío, al arrancar',      e:['motor']},
+  ]},
+ ]},
+
+{id:'falla', ic:'📉', t:'Pierde fuerza o falla', s:'Tironea, no levanta, se ahoga',
+ qs:[
+  {q:'¿Cómo se comporta?', o:[
+    {t:'Tironea al acelerar',            e:['inyeccion'],           u:'importante', h:'encendido o inyección'},
+    {t:'No levanta, le falta potencia',  e:['inyeccion','motor'],   u:'importante', h:'alimentación, turbo o filtros'},
+    {t:'Se apaga solo en marcha',        e:['inyeccion','electrico'],u:'critico',   h:'corte de alimentación o eléctrico'},
+    {t:'Ralentí inestable o se ahoga',   e:['inyeccion'],           u:'importante', h:'inyectores, sensores o admisión'},
+  ]},
+  {q:'¿Prendió alguna luz en el tablero?', o:[
+    {t:'Sí, la luz de motor (check)',    e:['inyeccion','inyeccion']},
+    {t:'Sí, otra luz',                   e:['electrico']},
+    {t:'No prendió ninguna',             e:['motor']},
+    {t:'No me fijé',                     e:['inyeccion']},
+  ]},
+ ]},
+
+{id:'electrico', ic:'⚡', t:'Problemas eléctricos', s:'Luces, batería, ventanillas',
+ qs:[
+  {q:'¿Qué falla?', o:[
+    {t:'Se descarga la batería sola',   e:['electrico'],  u:'importante', h:'fuga de corriente o alternador'},
+    {t:'Luces que no andan o titilan',  e:['electrico'],  u:'importante', h:'instalación o masas'},
+    {t:'Ventanillas, cierre o alarma',  e:['electrico'],  u:'preventivo', h:'accesorios eléctricos'},
+    {t:'Tablero con testigos raros',    e:['electrico','inyeccion'], u:'importante', h:'electrónica de a bordo'},
+  ]},
+  {q:'¿Hace cuánto pasa?', o:[
+    {t:'Empezó de golpe',      e:['electrico','electrico']},
+    {t:'Viene empeorando',     e:['electrico']},
+    {t:'Solo con humedad o lluvia', e:['electrico','electrico']},
+    {t:'Después de una reparación', e:['electrico']},
+  ]},
+ ]},
+
+{id:'frenos', ic:'🛑', t:'Frenos', s:'Pedal blando, ruido, tira para un lado',
+ qs:[
+  {q:'¿Qué notás al frenar?', o:[
+    {t:'El pedal se va al fondo',      e:['frenos','frenos'], u:'critico', h:'pérdida de líquido o aire en el circuito'},
+    {t:'Chirría o hace ruido metálico',e:['frenos'],          u:'importante', h:'pastillas al límite'},
+    {t:'Vibra el volante al frenar',   e:['frenos'],          u:'importante', h:'discos alabeados'},
+    {t:'Tira para un lado',            e:['frenos','tren_del'],u:'critico',   h:'pinza trabada o desbalance de frenado'},
+  ]},
+  {q:'¿Prendió la luz de freno o notás el nivel bajo?', o:[
+    {t:'Sí, luz encendida',      e:['frenos','frenos']},
+    {t:'Veo manchas bajo el auto',e:['frenos','frenos']},
+    {t:'No',                     e:['frenos']},
+    {t:'No sé',                  e:['frenos']},
+  ]},
+ ]},
+
+{id:'temperatura', ic:'🌡️', t:'Recalienta', s:'Sube la aguja, pierde agua',
+ qs:[
+  {q:'¿Qué pasa con la temperatura?', o:[
+    {t:'Sube la aguja en el tránsito', e:['refrigeracion'], u:'critico', h:'electroventilador o radiador'},
+    {t:'Sube siempre',                 e:['refrigeracion','motor'], u:'critico', h:'bomba de agua, termostato o junta'},
+    {t:'Pierde agua o refrigerante',   e:['refrigeracion'], u:'critico', h:'mangueras, radiador o bomba'},
+    {t:'No sale calefacción',          e:['refrigeracion'], u:'preventivo', h:'circuito de refrigeración'},
+  ]},
+  {q:'¿Ves humo blanco por el escape?', o:[
+    {t:'Sí, bastante',   e:['motor','motor']},
+    {t:'Solo al arrancar en frío', e:['refrigeracion']},
+    {t:'No',             e:['refrigeracion','refrigeracion']},
+    {t:'No sé',          e:['refrigeracion']},
+  ]},
+ ]},
+
+{id:'direccion', ic:'🎯', t:'Vibra o tira la dirección', s:'Volante duro, vibración, se va de mano',
+ qs:[
+  {q:'¿Qué sentís en el volante?', o:[
+    {t:'Vibra a partir de cierta velocidad', e:['tren_del'], u:'importante', h:'balanceo, cubiertas o tren delantero'},
+    {t:'Se va para un lado solo',            e:['tren_del'], u:'importante', h:'alineación o tren delantero'},
+    {t:'Está duro para girar',               e:['tren_del'], u:'importante', h:'dirección asistida'},
+    {t:'Tiene juego, se siente flojo',       e:['tren_del','suspension'], u:'critico', h:'rótulas o cremallera'},
+  ]},
+  {q:'¿Cómo están las cubiertas?', o:[
+    {t:'Se gastan disparejo',   e:['tren_del','suspension']},
+    {t:'Están bien',            e:['tren_del']},
+    {t:'Bastante gastadas',     e:['tren_del']},
+    {t:'No sé',                 e:['tren_del']},
+  ]},
+ ]},
+
+{id:'perdida', ic:'💧', t:'Pierde líquido', s:'Manchas abajo del auto',
+ qs:[
+  {q:'¿De qué color es la mancha?', o:[
+    {t:'Negra o marrón (aceite)',   e:['motor'],       u:'importante', h:'pérdida de aceite de motor'},
+    {t:'Verde, rosa o celeste',     e:['refrigeracion'],u:'critico',   h:'refrigerante'},
+    {t:'Transparente y aceitosa',   e:['frenos'],      u:'critico',    h:'líquido de frenos o dirección'},
+    {t:'Roja',                      e:['transmision'], u:'importante', h:'caja automática o dirección hidráulica'},
+  ]},
+  {q:'¿Cuánto pierde?', o:[
+    {t:'Bastante, se ve el charco', e:['motor','refrigeracion']},
+    {t:'Unas gotas',                e:['motor']},
+    {t:'Solo cuando está caliente', e:['motor']},
+    {t:'No sé',                     e:['general']},
+  ]},
+ ]},
+
+{id:'embrague', ic:'🌀', t:'Embrague o caja', s:'Patina, cuesta poner cambios',
+ qs:[
+  {q:'¿Qué notás?', o:[
+    {t:'El embrague patina',        e:['transmision','transmision'], u:'importante', h:'kit de embrague'},
+    {t:'Cuesta poner los cambios',  e:['transmision'], u:'importante', h:'embrague o sincronizados'},
+    {t:'Ruido al pisar el pedal',   e:['transmision'], u:'importante', h:'rulemán de empuje'},
+    {t:'El pedal está muy duro o flojo', e:['transmision'], u:'importante', h:'comando hidráulico o cable'},
+  ]},
+  {q:'¿Cuántos km tiene el vehículo?', o:[
+    {t:'Menos de 80.000',   e:['transmision']},
+    {t:'Entre 80 y 150.000',e:['transmision']},
+    {t:'Más de 150.000',    e:['transmision','transmision']},
+    {t:'No sé',             e:['transmision']},
+  ]},
+ ]},
+
+{id:'clima', ic:'🌬️', t:'Aire acondicionado', s:'No enfría, hace ruido',
+ qs:[
+  {q:'¿Qué le pasa al aire?', o:[
+    {t:'No enfría nada',        e:['clima'], u:'preventivo', h:'carga de gas o compresor'},
+    {t:'Enfría poco',           e:['clima'], u:'preventivo', h:'carga de gas o filtro'},
+    {t:'Hace ruido al prenderlo',e:['clima'],u:'importante', h:'compresor o embrague magnético'},
+    {t:'Tira olor feo',         e:['clima'], u:'preventivo', h:'filtro de habitáculo o evaporador'},
+  ]},
+  {q:'¿Cuándo fue la última carga de gas?', o:[
+    {t:'Hace menos de un año', e:['clima','clima']},
+    {t:'Hace más de un año',   e:['clima']},
+    {t:'Nunca',                e:['clima']},
+    {t:'No sé',                e:['clima']},
+  ]},
+ ]},
+
+{id:'service', ic:'🔧', t:'Service o mantenimiento', s:'Cambio de aceite, filtros, correa',
+ qs:[
+  {q:'¿Qué necesitás?', o:[
+    {t:'Service completo',            e:['general'], u:'preventivo', h:'mantenimiento programado'},
+    {t:'Cambio de correa de distribución', e:['motor'], u:'importante', h:'distribución'},
+    {t:'Frenos por kilometraje',      e:['frenos'],  u:'preventivo', h:'mantenimiento de frenos'},
+    {t:'Revisión general antes de un viaje', e:['general'], u:'preventivo', h:'chequeo pre-viaje'},
+  ]},
+  {q:'¿Cuándo fue el último service?', o:[
+    {t:'Hace menos de 10.000 km', e:['general']},
+    {t:'Entre 10 y 20.000 km',    e:['general']},
+    {t:'Más de 20.000 km',        e:['general','motor']},
+    {t:'No sé / lo compré usado',  e:['general','motor']},
+  ]},
+ ]},
+
+{id:'nose', ic:'❓', t:'No sé qué tiene', s:'Contame vos y te orientamos',
+ qs:[
+  {q:'¿Podés circular con el vehículo?', o:[
+    {t:'No, está parado',            e:['general'], u:'critico'},
+    {t:'Sí, pero anda mal',          e:['general'], u:'importante'},
+    {t:'Sí, anda bien pero me preocupa algo', e:['general'], u:'preventivo'},
+    {t:'Es para mantenimiento',      e:['general'], u:'preventivo'},
+  ]},
+  {q:'¿Hace cuánto viene pasando?', o:[
+    {t:'Empezó hoy',        e:['general']},
+    {t:'Hace unos días',    e:['general']},
+    {t:'Hace semanas o más',e:['general']},
+    {t:'Siempre lo tuvo',   e:['general']},
+  ]},
+ ]},
+];
+
+const TALLERES = [
+  {id:'t1',n:'Taller San Martín',mec:'Rubén Ortiz',zona:'Alta Córdoba',dist:2.1,cal:4.8,
+   esp:['tren_del','suspension','frenos','general'],turno:'Mañana 9:00',
+   bio:'35 años de oficio. Fuerte en tren delantero y suspensión de camionetas.',
+   st:{casos:52,sinRep:6,pedidos:41,comprados:34}},
+  {id:'t2',n:'Mecánica Central',mec:'Darío Peralta',zona:'Alta Córdoba',dist:3.4,cal:4.6,
+   esp:['motor','general','transmision','refrigeracion'],turno:'Hoy 15:00',
+   bio:'Mecánica general y motor. Trabaja nafta y diésel.',
+   st:{casos:38,sinRep:4,pedidos:29,comprados:22}},
+  {id:'t3',n:'Electromecánica Norte',mec:'Leo Miranda',zona:'Alta Córdoba',dist:5.8,cal:4.7,
+   esp:['electrico','inyeccion','clima'],turno:'Mañana 14:00',
+   bio:'Scanner y diagnóstico electrónico. Especialista en inyección y fallas eléctricas.',
+   st:{casos:44,sinRep:9,pedidos:31,comprados:25}},
+  {id:'t4',n:'Frenos Belgrano',mec:'Ariel Sosa',zona:'Centro',dist:6.9,cal:4.5,
+   esp:['frenos','suspension'],turno:'Hoy 17:00',
+   bio:'Solo frenos y suspensión. Banco de prueba de frenado propio.',
+   st:{casos:31,sinRep:2,pedidos:26,comprados:21}},
+  {id:'t5',n:'Diésel Sur',mec:'Marcos Vega',zona:'Zona Sur',dist:8.2,cal:4.9,
+   esp:['inyeccion','motor','general'],turno:'Jueves 8:00',
+   bio:'Inyección diésel common rail. Banco de inyectores propio.',
+   st:{casos:61,sinRep:5,pedidos:52,comprados:44}},
+  {id:'t6',n:'Taller El Cruce',mec:'Nicolás Bertea',zona:'Villa Allende',dist:11.4,cal:4.3,
+   esp:['general','motor','frenos'],turno:'Viernes 10:00',
+   bio:'Mecánica general de barrio. Atiende particulares y remises.',
+   st:{casos:47,sinRep:3,pedidos:12,comprados:8}},
+  {id:'t7',n:'Autoservice Colón',mec:'Javier Ludueña',zona:'Centro',dist:7.1,cal:4.4,
+   esp:['general','clima','electrico'],turno:'Hoy 16:00',
+   bio:'Service rápido y aire acondicionado.',
+   st:{casos:29,sinRep:7,pedidos:16,comprados:12}},
+  {id:'t8',n:'Suspensiones Ruta 9',mec:'Hernán Coria',zona:'Zona Sur',dist:9.6,cal:4.6,
+   esp:['suspension','tren_del','frenos'],turno:'Mañana 8:30',
+   bio:'Tren delantero y alineación computarizada.',
+   st:{casos:35,sinRep:2,pedidos:30,comprados:26}},
+  {id:'t9',n:'Inyección Córdoba',mec:'Pablo Ferreyra',zona:'Alta Córdoba',dist:4.2,cal:4.5,
+   esp:['inyeccion','electrico','motor'],turno:'Jueves 11:00',
+   bio:'Diagnóstico electrónico y reparación de inyectores.',
+   st:{casos:26,sinRep:4,pedidos:9,comprados:5}},
+  {id:'t10',n:'Taller Los Pinos',mec:'Sergio Ávila',zona:'Villa Allende',dist:12.8,cal:4.2,
+   esp:['general','transmision'],turno:'Lunes 9:00',
+   bio:'Cajas manuales y embragues.',
+   st:{casos:22,sinRep:1,pedidos:18,comprados:14}},
+  {id:'t11',n:'Mecánica Yofre',mec:'Cristian Nieto',zona:'Centro',dist:5.3,cal:4.1,
+   esp:['general','frenos','refrigeracion'],turno:'Miércoles 14:00',
+   bio:'Mecánica general y radiadores.',
+   st:{casos:40,sinRep:2,pedidos:7,comprados:4}},
+  {id:'t12',n:'Servicio Rápido Alberdi',mec:'Emiliano Paz',zona:'Centro',dist:6.4,cal:4.0,
+   esp:['general','clima'],turno:'Hoy 18:00',
+   bio:'Service y mantenimiento programado.',
+   st:{casos:18,sinRep:5,pedidos:11,comprados:9}},
+];
+
+/* Cuentas de cliente: usuario = PATENTE, con contrasena y tarjeta verde en Drive */
+const CLIENTES = [
+  {pat:'AB123CD', pass:'hilux2018', nombre:'Facundo Ruiz', tel:'+54 351 245-0332',
+   veh:{marca:'Toyota',modelo:'Hilux',anio:2018,motor:'3.0 TDi',km:187400},
+   tv:{arch:'AB123CD_tarjeta_verde.jpg', drive:'drive.google.com/fratello/tv/AB123CD',
+       subida:'28/07/2026', titular:'Facundo A. Ruiz', verif:true}, casos:2},
+  {pat:'AA887KL', pass:'amarok2015', nombre:'Marcelo Tissera', tel:'+54 351 512-8890',
+   veh:{marca:'Volkswagen',modelo:'Amarok',anio:2015,motor:'2.0 TDi',km:242000},
+   tv:{arch:'AA887KL_tarjeta_verde.jpg', drive:'drive.google.com/fratello/tv/AA887KL',
+       subida:'01/08/2026', titular:'Marcelo J. Tissera', verif:true}, casos:1},
+  {pat:'AD442XR', pass:'ranger2020', nombre:'Andrea Luque', tel:'+54 351 700-1122',
+   veh:{marca:'Ford',modelo:'Ranger',anio:2020,motor:'3.2 TDi',km:96500},
+   tv:{arch:'AD442XR_tarjeta_verde.jpg', drive:'drive.google.com/fratello/tv/AD442XR',
+       subida:'02/08/2026', titular:'Andrea S. Luque', verif:false}, casos:1},
+];
+
+/* Cuentas de mecanico de la red (usuario + PIN). El rol se deduce de la cuenta. */
+const MECANICOS = [
+  {user:'ruben', pass:'taller1', nombre:'Rubén Ortiz', taller:'Taller San Martín'},
+];
+/* Cuentas internas de la casa de repuestos (mostrador). */
+const FRATELLO = [
+  {user:'mostrador', pass:'fratello', nombre:'Mostrador Fratello'},
+];
+
+/* Metricas de lealtad del mecanico.
+   tasaPedido = pedidos / (casos - trabajos declarados sin repuesto)
+   Es la metrica clave: mide si el taller usa la app solo para captar clientes. */
+function stats(t){
+  const base = Math.max(1, t.st.casos - t.st.sinRep);
+  const tasaPedido = t.st.pedidos / base;
+  const tasaCompra = t.st.pedidos ? t.st.comprados / t.st.pedidos : 0;
+  const lealtad = t.st.comprados / base;
+  let estado, cls;
+  if(tasaPedido >= .60){ estado='Activa'; cls='b-ok'; }
+  else if(tasaPedido >= .35){ estado='En observación'; cls='b-warn'; }
+  else { estado='En revisión'; cls='b-crit'; }
+  return {tasaPedido, tasaCompra, lealtad, estado, cls, base};
+}
+const pct = v => Math.round(v*100)+'%';
+const ranking = () => TALLERES.slice().sort((a,b)=>stats(b).lealtad-stats(a).lealtad);
+
+const RUBROS = [
+  {id:'frenos',ic:'🛑',n:'Frenos',crit:true},{id:'direccion',ic:'🎯',n:'Dirección',crit:true},
+  {id:'suspension',ic:'🔩',n:'Suspensión',crit:true},{id:'neumaticos',ic:'⭕',n:'Neumáticos',crit:true},
+  {id:'filtros',ic:'🧽',n:'Filtros',crit:false},{id:'motor',ic:'⚙️',n:'Motor',crit:false},
+  {id:'distrib',ic:'🔗',n:'Distribución',crit:false},{id:'embrague',ic:'🌀',n:'Embrague',crit:false},
+  {id:'encendido',ic:'⚡',n:'Encendido',crit:false},{id:'diesel',ic:'💧',n:'Inyección diésel',crit:false},
+  {id:'electrico',ic:'🔌',n:'Eléctrico',crit:false},{id:'refriger',ic:'❄️',n:'Refrigeración',crit:false},
+  {id:'lubric',ic:'🛢️',n:'Lubricantes',crit:false},{id:'bateria',ic:'🔋',n:'Baterías',crit:false},
+];
+
+const MARCAS = [
+  {n:'Bosch',p:'Alemania',l:'primera'},{n:'Mann-Filter',p:'Alemania',l:'primera'},
+  {n:'SKF',p:'Suecia',l:'primera'},{n:'Mahle',p:'Alemania',l:'primera'},
+  {n:'NGK',p:'Japón',l:'primera'},{n:'Sachs',p:'Alemania',l:'primera'},
+  {n:'Gates',p:'EE.UU.',l:'alternativa'},{n:'Monroe',p:'EE.UU.',l:'alternativa'},
+  {n:'Ferodo',p:'R. Unido',l:'alternativa'},{n:'Fram',p:'EE.UU.',l:'alternativa'},
+  {n:'Valeo',p:'Francia',l:'alternativa'},{n:'Moura',p:'Brasil',l:'alternativa'},
+  {n:'Corven',p:'Argentina',l:'economica'},{n:'Wega',p:'Brasil',l:'economica'},
+  {n:'Cobreq',p:'Brasil',l:'economica'},{n:'Taranto',p:'Argentina',l:'economica'},
+];
+
+/* Estados visibles del caso */
+const EST = {
+  0:{n:'Esperando turno',        c:'b-warn',  d:'El taller te da día y hora'},
+  1:{n:'Turno confirmado',       c:'b-info',  d:'El taller te espera'},
+  2:{n:'En el taller',           c:'b-info',  d:'El mecánico está revisando'},
+  3:{n:'Repuestos pedidos',      c:'b-warn',  d:'El mecánico nos pidió los repuestos'},
+  4:{n:'Opciones enviadas',      c:'b-warn',  d:'Están en el chat del caso'},
+  5:{n:'Confirmado y pagado',    c:'b-ok',    d:'Preparamos el pedido'},
+  6:{n:'En reparación',          c:'b-ok',    d:'El repuesto está en el taller'},
+  7:{n:'Listo',                  c:'b-neutral',d:'Trabajo terminado'},
+};
+const URG = {
+  critico:{n:'Crítico',s:'🔴',c:'b-crit',t:'No circules con el vehículo'},
+  importante:{n:'Importante',s:'🟠',c:'b-warn',t:'Resolver dentro de los próximos días'},
+  preventivo:{n:'Preventivo',s:'🔵',c:'b-info',t:'Podés programarlo con tranquilidad'},
+};
+
+/* ---------- CRITERIO DE COMPRA ----------
+   Lo carga el mecánico, porque es el único que habla cara a cara con el
+   cliente cuando deja el vehículo. No bloquea líneas: define cuál se
+   RECOMIENDA y con qué texto se le presenta al cliente en el chat.
+   La restricción de seguridad crítica (ecoOk por ítem) sigue mandando
+   por encima de esto.                                                */
+const CRITERIO = {
+  economica:{ n:'Lo más barato', s:'💵', c:'b-neutral', tag:'Prioriza precio',
+    orden:['economica','alternativa','primera'],
+    mec:'El cliente quiere gastar lo mínimo y volver a circular. Ofrecele primero la línea económica.',
+    cli:'priorizar el precio' },
+  equilibrada:{ n:'Equilibrado', s:'⚖️', c:'b-info', tag:'Precio / calidad',
+    orden:['alternativa','primera','economica'],
+    mec:'Sin preferencia marcada. Mostrale las tres líneas y recomendá la alternativa.',
+    cli:'una relación precio / calidad' },
+  primera:{ n:'Que dure', s:'🏆', c:'b-ok', tag:'Prioriza durabilidad',
+    orden:['primera','alternativa','economica'],
+    mec:'El cliente prioriza durabilidad. Primera línea o equipo original; la económica solo como referencia.',
+    cli:'priorizar la durabilidad' },
+};
+/* ---------- AGENDA DEL TALLER ----------
+   Fratello no asigna turnos: solo deriva el caso al taller. El día y la
+   hora los elige el mecánico sobre su propia agenda, que es el único que
+   sabe qué elevador tiene libre y cuánto le lleva cada trabajo.        */
+const DIAS_S = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+function diasTurno(n){
+  const out=[], hoy=new Date();
+  for(let i=1; out.length<(n||6); i++){
+    const x=new Date(hoy.getTime()+i*864e5);
+    if(x.getDay()===0) continue;                       // domingo cerrado
+    out.push({ k:x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'),
+      n:DIAS_S[x.getDay()].slice(0,3), f:x.getDate()+'/'+String(x.getMonth()+1).padStart(2,'0'),
+      largo:DIAS_S[x.getDay()]+' '+x.getDate()+'/'+String(x.getMonth()+1).padStart(2,'0'),
+      sab:x.getDay()===6 });
+  }
+  return out;
+}
+const HORAS = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30',
+               '14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30'];
+const horasDe = d => d && d.sab ? HORAS.filter(h=>h<'13:00') : HORAS;
+/* Ocupación simulada pero determinística: la misma agenda en cada render */
+function ocupado(dk,h){
+  let a=7; const t=dk+h;
+  for(let i=0;i<t.length;i++) a=(a*31+t.charCodeAt(i))%9973;
+  return a%3===0;
+}
+/* Dada la lista de líneas efectivamente ofrecidas, cuál se marca ⭐ */
+function lineaRec(crit, lineas){
+  const o = (CRITERIO[crit]||CRITERIO.equilibrada).orden;
+  return o.find(l=>lineas.includes(l)) || null;
+}
+
+/* El estado 1 tiene dos lecturas: el taller propuso día y hora, y el
+   cliente todavía no lo aceptó. Sin esa confirmación el turno no vale. */
+function estadoDe(c){
+  if(c.estado===1 && c.turno && !c.turno.ok)
+    return {n:'Turno a confirmar por vos', c:'b-warn', d:'El taller propuso día y hora'};
+  if(c.estado===1) return {n:'Turno confirmado', c:'b-info', d:'El taller te espera'};
+  return EST[c.estado];
+}
+let ID = 210;
+const money = v => v==null||v===''?'—':'$ '+Number(v).toLocaleString('es-AR');
+const rub = id => RUBROS.find(r=>r.id===id)||RUBROS[5];
+const tal = id => TALLERES.find(t=>t.id===id);
+
+/* ---------- CHAT: modelo de datos ----------
+   Cada caso tiene dos hilos independientes:
+   chat.cli  → cliente ↔ mostrador  (acá viaja la cotización)
+   chat.mec  → taller  ↔ mostrador  (sin precios, nunca lo ve el cliente)
+   Emisores: 'cliente' | 'fratello' | 'mecanico' | 'sys'          */
+const M  = (de,txt,hora,foto) => ({de, txt, hora:hora||'recién', foto:foto||null});
+const SYS = (txt,hora) => ({de:'sys', txt, hora:hora||''});
+const COT = (hora) => ({de:'fratello', tipo:'cot', txt:'', hora:hora||'recién'});
+function hilo(c,h){ if(!c.chat) c.chat={cli:[],mec:[]}; if(!c.chat[h]) c.chat[h]=[]; return c.chat[h]; }
+function decir(c,h,msg){ hilo(c,h).push(msg); }
+const esc = t => String(t).replace(/</g,'&lt;').replace(/\*([^*]+)\*/g,'<b>$1</b>');
+
+function seed(){ return [
+  {id:'FR-00204', estado:3, cliente:'Marcelo Tissera', tel:'+54 351 512-8890',
+   veh:{marca:'Volkswagen',modelo:'Amarok',anio:2015,motor:'2.0 TDi',km:242000,pat:'AA 887 KL'},
+   cat:'no_arranca', resp:['Gira el motor pero no arranca','Prenden normal'],
+   esp:'inyeccion', urg:'importante', taller:'t3', zona:'Alta Córdoba',
+   diag:'Tres de las cuatro bujías de precalentamiento sin continuidad. Relé responde bien. Compresión OK en los cuatro cilindros, se descarta desgaste interno.',
+   pedido:[
+     {id:'p1',rubro:'diesel',desc:'Bujías de precalentamiento (juego x4)',oem:'03L963319',cant:1,ops:[]},
+     {id:'p2',rubro:'filtros',desc:'Filtro de combustible',oem:'2H0127401',cant:1,ops:[]},
+   ], manoObra:'', creado:'hoy 09:20', pedidoEn:'hoy 12:25', criterio:'economica',
+   turno:{ok:true,k:'seed',largo:'hoy',h:'10:30',nota:''},
+   chat:{
+     cli:[
+       SYS('Pedido de turno enviado a Electromecánica Norte · hoy 09:20'),
+       M('fratello','Hola Marcelo, soy Sofía del mostrador de Fratello. Le pasé tu caso a Leo; el turno te lo confirma él según cómo tenga el taller.','09:22'),
+       SYS('Turno confirmado · hoy 10:30'),
+       M('fratello','Leo te dio turno para hoy 10:30. Cualquier cosa me escribís por acá.','09:35'),
+       M('cliente','Dale, gracias. Arranca pero le cuesta un montón en frío.','09:31'),
+       SYS('El taller recibió el vehículo · hoy 10:40'),
+       SYS('El taller pidió los repuestos · hoy 12:25'),
+       M('fratello','Leo ya lo revisó: son las bujías de precalentamiento. Estoy armando las opciones y en un rato te las paso por acá.','12:31'),
+     ],
+     mec:[
+       M('mecanico','Sofía, medí las cuatro bujías: tres sin continuidad. Compresión OK en los cuatro cilindros, no es desgaste interno.','12:20'),
+       M('mecanico','Te mando la foto del banco de pruebas.','12:21','banco_bujias_AA887KL.jpg'),
+       M('fratello','Perfecto Leo, gracias. ¿El filtro de combustible lo cambiamos en el mismo trabajo?','12:26'),
+       M('mecanico','Sí, aprovechemos que está desarmado.','12:28'),
+       M('mecanico','Criterio del cliente: 💵 Lo más barato. Tiene la camioneta parada y quiere volver a laburar, no le interesa la marca mientras arranque.','12:29'),
+     ]}},
+
+  {id:'FR-00205', estado:0, turno:null, cliente:'Facundo Ruiz', tel:'+54 351 245-0332',
+   veh:{marca:'Audi',modelo:'Q5',anio:2014,motor:'2.0 TFSI',km:161200,pat:'MPT 445'},
+   cat:'ruidos', resp:['De adelante, al pasar pozos','Empeora con carga'],
+   esp:'suspension', urg:'importante', taller:'t1', zona:'Alta Córdoba',
+   diag:null, pedido:[], creado:'hoy 11:05',
+   chat:{
+     cli:[
+       SYS('Pedido de turno enviado a Taller San Martín · hoy 11:05'),
+       M('fratello','Hola Facundo, soy Sofía del mostrador. Le pasé tu caso a Rubén con el triage que hiciste. El día y la hora los pone él según cómo tenga el taller: apenas te dé el turno te aviso por acá.','11:07'),
+       M('cliente','Perfecto. Cuanto antes mejor, lo uso todos los días.','11:12'),
+     ],
+     mec:[
+       M('fratello','Rubén, te entra un Audi Q5 2014 con ruido de tren delantero que empeora con carga. Triage: suspensión. Dale turno cuando puedas, el cliente lo usa todos los días.','11:07'),
+     ]}},
+
+  {id:'FR-00203', estado:2, cliente:'Andrea Luque', tel:'+54 351 700-1122',
+   veh:{marca:'Ford',modelo:'Ranger',anio:2020,motor:'3.2 TDi',km:96500,pat:'AD 442 XR'},
+   cat:'ruidos', resp:['De adelante, al pasar pozos','Solo en pozos o lomos'],
+   esp:'suspension', urg:'importante', taller:'t1', zona:'Alta Córdoba',
+   diag:null, pedido:[], creado:'hoy 08:40', turno:{ok:true,k:'seed',largo:'hoy',h:'09:00',nota:'Traela con el tanque por debajo de la mitad.'},
+   chat:{
+     cli:[
+       SYS('Pedido de turno enviado a Taller San Martín · hoy 08:40'),
+       M('fratello','Hola Andrea, ya le pasé el caso a Rubén. El día y la hora te los confirma él.','08:42'),
+       SYS('Turno confirmado · hoy 09:00'),
+       M('fratello','Rubén te dio turno para hoy 09:00 y te pide que la lleves con el tanque por debajo de la mitad. Él hace el diagnóstico y después te escribo yo con lo que necesite.','08:44'),
+       M('cliente','Perfecto. Suena adelante cuando paso un pozo, sobre todo con la camioneta cargada.','08:51'),
+       M('fratello','Anotado, se lo paso a Rubén así ya sabe por dónde arrancar.','08:53'),
+       SYS('El taller recibió el vehículo · hoy 09:15'),
+     ],
+     mec:[
+       M('fratello','Rubén, te llega una Ranger 2020 con ruido de tren delantero en pozos. La clienta dice que empeora con carga.','08:53'),
+       M('mecanico','Recibido. La subo al elevador a la tarde y te aviso.','09:16'),
+     ]}},
+
+  {id:'FR-00202', estado:4, cliente:'Facundo Ruiz', tel:'+54 351 245-0332',
+   veh:{marca:'Toyota',modelo:'Hilux',anio:2018,motor:'3.0 TDi',km:187400,pat:'AB 123 CD'},
+   cat:'frenos', resp:['El pedal se va al fondo','Veo manchas bajo el auto'],
+   esp:'frenos', urg:'critico', taller:'t4', zona:'Alta Córdoba',
+   diag:'Pérdida de líquido por pinza delantera derecha con retén vencido y pistón agarrotado. Requiere pinza completa, juego de pastillas delanteras y purgado total.',
+   pedido:[
+     {id:'q1',rubro:'frenos',desc:'Pinza de freno delantera derecha',oem:'47730-0K090',cant:1,
+      ops:[{l:'primera',p:'TRW BHN-284E',pr:412000,d:'stock'},{l:'alternativa',p:'Corven 4B-1180',pr:268000,d:'48h'}]},
+     {id:'q2',rubro:'frenos',desc:'Juego de pastillas delanteras',oem:'04465-0K260',cant:1,
+      ops:[{l:'primera',p:'Textar 2438401',pr:98000,d:'stock'},{l:'alternativa',p:'Ferodo FDB-4056',pr:64500,d:'stock'}]},
+     {id:'q3',rubro:'frenos',desc:'Líquido de freno DOT 4 · 1 L',oem:null,cant:1,
+      ops:[{l:'alternativa',p:'Bosch DOT4 1L',pr:18400,d:'stock'}]},
+   ], manoObra:145000, creado:'ayer 16:10', pedidoEn:'hoy 10:05', cotEnviada:'hoy 11:12', criterio:'equilibrada',
+   turno:{ok:true,k:'seed',largo:'hoy',h:'08:00',nota:'No la muevas más de lo necesario.'},
+   chat:{
+     cli:[
+       SYS('Pedido de turno enviado a Frenos Belgrano · ayer 16:10'),
+       M('fratello','Hola Facundo, soy Sofía del mostrador. Por lo que contaste (pedal al fondo y manchas abajo) te pusimos con Ariel, que es el que hace frenos. No la muevas más de lo necesario.','ayer 16:14'),
+       M('cliente','Ok. Te mando una foto de la mancha en el piso del garage.','ayer 16:20','mancha_garage.jpg'),
+       M('fratello','Es líquido de freno, sí. Le paso el caso a Ariel para que te dé turno.','ayer 16:25'),
+       SYS('Turno confirmado · hoy 08:00'),
+       M('fratello','Ariel te dio turno para hoy a las 08:00 y te pide que no la muevas más de lo necesario.','ayer 16:40'),
+       SYS('El taller recibió el vehículo · hoy 08:30'),
+       SYS('El taller pidió los repuestos · hoy 10:05'),
+       COT('hoy 11:12'),
+       M('fratello','Cualquier duda con las opciones me decís. La alternativa es Corven, que en pinza anda bien y te ahorra bastante.','11:13'),
+     ],
+     mec:[
+       M('mecanico','Sofía, es la pinza delantera derecha: retén vencido y pistón agarrotado. Pierde por ahí.','09:58'),
+       M('mecanico','Va foto de la pinza desarmada.','09:59','pinza_del_der_AB123CD.jpg'),
+       M('fratello','Gracias Ariel. ¿Habilitás línea económica en las pastillas o vamos primera y alternativa nomás?','10:07'),
+       M('mecanico','Pastillas alternativa está bien. Económica en pinza ni loco.','10:11'),
+     ]}},
+
+  {id:'FR-00199', estado:7, cliente:'Facundo Ruiz', tel:'+54 351 245-0332',
+   veh:{marca:'Audi',modelo:'Q5',anio:2014,motor:'2.0 TFSI',km:158000,pat:'MPT 445'},
+   cat:'service', resp:['Service completo','Más de 20.000 km'],
+   esp:'general', urg:'preventivo', taller:'t2', zona:'Alta Córdoba',
+   diag:'Servicio de 160.000 km sin observaciones adicionales.',
+   pedido:[{id:'r1',rubro:'filtros',desc:'Kit de filtros',oem:null,cant:1,
+     ops:[{l:'primera',p:'Mann-Filter kit',pr:96000,d:'stock'}]}],
+   manoObra:78000, creado:'28/07', pedidoEn:'29/07', cotEnviada:'29/07', criterio:'primera',
+   turno:{ok:true,k:'seed',largo:'28/07',h:'11:00',nota:''},
+   chat:{
+     cli:[
+       SYS('Pedido de turno enviado a Mecánica Central · 28/07'),
+       SYS('Turno confirmado · 28/07 11:00'),
+       SYS('El taller pidió los repuestos · 29/07'),
+       COT('29/07 10:40'),
+       M('cliente','Vamos con el kit Mann.','29/07 11:02'),
+       M('fratello','Listo, lo mandamos al taller. Cualquier cosa quedamos por acá.','29/07 11:05'),
+       SYS('Pago confirmado · 29/07'),
+       SYS('Trabajo terminado · 30/07'),
+     ],
+     mec:[
+       M('mecanico','Service de 160.000 sin observaciones. Solo el kit de filtros.','29/07 09:50'),
+     ]}},
+];}
+
+let S = {
+  role:'cliente',
+  entered:false, demo:false, door:{id:'',pass:'',err:''},
+  cli:'home', cliCaso:null, logged:false, user:null, nombre:'', tel:'',
+  login:{pat:'',pass:'',err:''}, reg:{pat:'',pass:'',pass2:'',nombre:'',tel:'',tv:null,err:''},
+  tri:null,                 // {cat, paso, resp:[], esp, urg, hint}
+  form:null,                // datos de vehículo
+  rep:null,                 // flujo "solo repuestos"
+  aux:null,                 // flujo "auxilio 24 h"
+  chatCaso:null, chatDraft:'', fraHilo:'cli',
+  mec:'home', mecCaso:null, mecDraft:null,
+  fra:'pedidos', fraCaso:null, fraDraft:null, otraFecha:null, turnoDraft:null,
+  casos: seed(),
+};
+
+const $ = s => document.querySelector(s);
+const caso = id => S.casos.find(c=>c.id===id);
+
+function toast(m,i='✓'){
+  $('#toast-root').innerHTML = '<div class="toast"><span>'+i+'</span>'+m+'</div>';
+  clearTimeout(window._t); window._t=setTimeout(()=>{$('#toast-root').innerHTML=''},3200);
+}
+function resetDemo(){
+  if(typeof _aux!=='undefined') clearInterval(_aux);
+  S.casos=seed(); S.cli='home'; S.tri=null; S.form=null; S.logged=false; S.user=null;
+  S.entered=true; S.demo=false; S.role='cliente'; S.cli='home'; S.door={id:'',pass:'',err:''};
+  S.rep=null; S.aux=null; S.tallerElegido=null;
+  S.mec='home'; S.fra='pedidos'; S.fraCaso=null; S.mecCaso=null; S.cliCaso=null;
+  S.otraFecha=null; S.turnoDraft=null;
+  render(); toast('Datos reiniciados','↺');
+}
+function validNow(){
+  if(S.role==='cliente' && S.cli==='datos'){
+    const f=S.form; if(!f) return false;
+    return !!(f.marca&&f.modelo&&f.anio&&f.km&&f.pat&&S.nombre.length>2&&S.tel.length>=8);
+  }
+  if(S.role==='mecanico' && S.mec==='turno'){
+    const d=S.turnoDraft; return !!(d && d.dia && d.hora);
+  }
+  if(S.role==='mecanico' && S.mec==='pedir'){
+    const d=S.mecDraft; if(!d) return false;
+    return d.diag.length>15 && d.items.some(i=>i.rubro&&i.desc.length>2);
+  }
+  if(S.role==='fratello' && S.fra==='pedidos' && S.fraCaso){
+    const c=caso(S.fraCaso), D=S.fraDraft; if(!c||!D) return false;
+    return c.pedido.every((it,ix)=>['primera','alternativa','economica']
+      .some(l=>{const o=D.ops[ix][l]; return o.p && +o.pr>0;}));
+  }
+  return true;
+}
+function sync(){
+  const ok=validNow(); const b=$('#cta'); if(b) b.disabled=!ok;
+  const h=$('#ctahint'); if(h) h.style.display= ok?'none':'block';
+}
+
+/* ================= CLIENTE ================= */
+function vCliente(){
+  const v={home:cHome,marcas:cMarcas,triage:cTriage,resultado:cResultado,mecanicos:cMecanicos,
+           login:cLogin,registro:cRegistro,datos:cDatos,casos:cCasos,caso:cCaso,cuenta:cCuenta,
+           repuestos:cRepuestos,auxilio:cAuxilio,auxtrack:cAuxTrack,chat:cChat}[S.cli]||cHome;
+  return '<div class="phone"><div class="phone-status"><span>9:41</span><span>Fratello</span><span>▮▮ 87%</span></div>'
+       + v() + tabbar() + '</div>';
+}
+const go = v => { S.cli=v; render(); };
+
+/* Barra inferior: siempre visible, el auxilio a un toque de distancia */
+function tabbar(){
+  const on = k => S.cli===k?'on':'';
+  const t = [
+    ['home','🏠','Inicio',()=>"go('home')"],
+    ['repuestos','🔩','Repuestos',()=>"irRepuestos()"],
+    ['auxilio','🆘','SOS',()=>"irAuxilio()"],
+    ['casos','📋','Mis casos',()=>"go(S.logged?'casos':'login')"],
+    ['cuenta','👤','Cuenta',()=>"go(S.logged?'cuenta':'login')"],
+  ];
+  return `<div class="tabbar">${t.map(([k,i,n,f])=>
+    `<button class="${on(k)} ${k==='auxilio'?'sos':''}" onclick="${f()}">
+       <span class="ti">${i}</span>${n}</button>`).join('')}</div>`;
+}
+
+function cHome(){
+  const mios = S.casos.filter(c=>c.cliente==='Facundo Ruiz');
+  const wa = mios.filter(c=>c.estado===4).length;
+  return `<div class="appbar">
+    <div class="logo"><div class="mark">F</div><div class="name">Fratello<small>Repuestos</small></div></div>
+    <span style="flex:1"></span>
+    ${S.logged?`<button class="btn btn-ghost btn-sm" onclick="go('casos')">Mis casos</button>`
+              :`<button class="btn btn-ghost btn-sm" onclick="go('login')">Ingresar</button>`}
+  </div>
+  <div class="body">
+    <div class="hero">
+      <div class="eyebrow">Casa de repuestos · Córdoba</div>
+      <h2>No te vendemos un repuesto.<br>Te resolvemos el problema.</h2>
+      <p>Tres caminos según lo que sepas: ya sabés qué repuesto necesitás, no sabés qué tiene el auto, o querés que lo vea un mecánico de la red.</p>
+    </div>
+
+    <div class="acts">
+      <button class="act act-main" onclick="irRepuestos()">
+        <span class="apill">Lo más rápido</span>
+        <div class="ai2">🔩</div>
+        <div><div class="at">Solo repuestos</div>
+          <div class="ad">Ya sabés qué necesitás o tenés el número de pieza. Cotizamos por patente y te contestamos en el chat.</div></div>
+        <span class="aa">›</span>
+      </button>
+
+      <button class="act act-sos" onclick="irAuxilio()">
+        <span class="apill">SOS 24 h</span>
+        <div class="ai2">🆘</div>
+        <div><div class="at">No sé qué tiene</div>
+          <div class="ad">Quedaste parado, no arranca o anda raro y no sabés por qué. Te mandamos un móvil que lo revisa donde estés.</div></div>
+        <span class="aa">›</span>
+      </button>
+
+      <button class="act act-mec" onclick="startTriage()">
+        <div class="ai2">🔧</div>
+        <div><div class="at">Contactar con un mecánico</div>
+          <div class="ad">Turno con el especialista correcto: él diagnostica, nos pide el repuesto y nosotros cerramos el precio con vos.</div></div>
+        <span class="aa">›</span>
+      </button>
+    </div>
+
+    ${wa?`<div style="padding:16px 18px 0"><div class="alert a-info"><span class="ai">💬</span>
+      <div><b>Tenés un mensaje del mostrador.</b> Están las opciones de repuesto para tu Hilux esperando respuesta.
+      <br><button style="text-decoration:underline;font-weight:750;margin-top:4px" onclick="abrirChat('FR-00202')">Abrir el chat →</button></div></div></div>`:''}
+
+    <div class="sect">
+      <h3>Por qué no somos una casa de repuestos más</h3>
+      ${[['🚫','No te hacemos buscar el repuesto','Ninguna casa de repuestos te puede decir qué necesita tu auto por teléfono. Nosotros no adivinamos: primero lo ve un mecánico.'],
+         ['🎯','Te mandamos al especialista correcto','Un ruido de tren delantero no lo resuelve un electricista. Según lo que nos cuentes, te mostramos solo los talleres que hacen ese trabajo.'],
+         ['💬','El precio te llega al chat del caso','El mecánico nos pide el repuesto exacto. Nosotros te publicamos dos o tres opciones con sus precios en el chat. Vos elegís y pagás ahí mismo.'],
+         ['🔧','Multimarca de verdad','Tenemos primera línea y línea económica. Te decimos cuál conviene según el uso que le des, no según nuestro margen.']]
+        .map(([i,t,d])=>`<div class="step-i"><div class="n" style="background:var(--surface-2);font-size:13px">${i}</div>
+          <div><div class="t">${t}</div><div class="d">${d}</div></div></div>`).join('')}
+    </div>
+
+    <div class="sect">
+      <h3>Cómo funciona con un mecánico</h3>
+      ${[['Contestás 3 preguntas','Sobre qué le pasa al auto. En 1 minuto.'],
+         ['Te mostramos los mecánicos','Solo los que hacen esa especialidad y están cerca tuyo. El día y la hora te los confirma el mecánico, no nosotros.'],
+         ['El mecánico nos pide el repuesto','Él sabe exactamente cuál es. Nos lo pide directo por la app.'],
+         ['Te llega la cotización al chat','Con dos o tres opciones y precios. Elegís, pagás y va al taller.']]
+        .map(([t,d],i)=>`<div class="step-i"><div class="n">${i+1}</div><div><div class="t">${t}</div><div class="d">${d}</div></div></div>`).join('')}
+    </div>
+
+    <div class="sect">
+      <h3>Nuestras marcas</h3>
+      <p style="font-size:13.5px;color:var(--ink-2);line-height:1.55;margin-bottom:13px">
+        <b>Trabajamos multimarca.</b> Primera línea para quien necesita durabilidad, línea económica para quien necesita resolver hoy sin resignar seguridad.</p>
+      <div class="brandgrid">${MARCAS.slice(0,9).map(m=>`<div class="bchip"><div class="bn">${m.n}</div><div class="br">${m.p}</div></div>`).join('')}</div>
+      <div style="margin-top:11px"><button class="btn btn-ghost btn-sm" style="width:100%" onclick="go('marcas')">Ver las ${MARCAS.length} marcas →</button></div>
+    </div>
+
+    <div class="sect"><h3>Dónde estamos</h3>
+      <div class="card"><div class="card-t">Casa central</div>
+        <div class="card-s">Av. Juan B. Justo 3200 · Alta Córdoba<br>Lun a Vie 8–18 · Sáb 8–13<br>WhatsApp +54 351 000-0000</div></div>
+    </div>
+    <div style="padding:20px 18px 30px;text-align:center;color:var(--ink-3);font-size:11.5px;line-height:1.6;border-top:8px solid var(--bg)">
+      Estás navegando sin cuenta.<br>Solo te pedimos nombre y celular cuando pedís el turno.
+    </div>
+  </div>`;
+}
+
+function cMarcas(){
+  const tit={primera:'Primera línea / Equipo original',alternativa:'Línea alternativa',economica:'Línea económica'};
+  const sub={primera:'Máxima durabilidad y ajuste exacto. Para mucha ruta, carga, flota o vehículo en garantía.',
+    alternativa:'Relación precio-prestación equilibrada. Cubre la mayoría de los casos de uso particular.',
+    economica:'Línea de acceso. Cumple función y homologación. Para bajo uso o presupuesto acotado.'};
+  return `<div class="appbar"><button class="back" onclick="go('home')">←</button><h1>Nuestras marcas<span class="sub">Multimarca · 3 líneas</span></h1></div>
+  <div class="body">${['primera','alternativa','economica'].map(l=>`<div class="sect">
+    <h3><span class="linetag lt-${l}" style="width:auto;padding:3px 10px">${l}</span></h3>
+    <div style="font-weight:750;font-size:15px;margin:-6px 0 4px">${tit[l]}</div>
+    <p class="muted" style="margin-bottom:13px">${sub[l]}</p>
+    <div class="brandgrid">${MARCAS.filter(m=>m.l===l).map(m=>`<div class="bchip"><div class="bn">${m.n}</div><div class="br">${m.p}</div></div>`).join('')}</div>
+  </div>`).join('')}
+  <div style="padding:18px"><div class="alert a-info"><span class="ai">🛡</span>
+    <div>En rubros de <b>seguridad crítica</b> (frenos, dirección, suspensión, neumáticos) no ofrecemos línea económica salvo que el mecánico que hizo el diagnóstico la habilite.</div></div></div>
+  <div style="height:20px"></div></div>`;
+}
+
+/* ---- TRIAGE ---- */
+function startTriage(){ S.tri={cat:null,paso:0,resp:[],votos:[],urg:null,hints:[]}; go('triage'); }
+function elegirCat(id){ S.tri.cat=id; S.tri.paso=1; render(); }
+function responder(oi){
+  const t=S.tri, cat=TRIAGE.find(c=>c.id===t.cat), q=cat.qs[t.paso-1], o=q.o[oi];
+  t.resp.push(o.t); t.votos.push(...o.e);
+  if(o.u) t.urg=o.u;
+  if(o.h) t.hints.push(o.h);
+  if(t.paso < cat.qs.length){ t.paso++; render(); }
+  else{
+    const cnt={}; t.votos.forEach(v=>cnt[v]=(cnt[v]||0)+1);
+    t.esp = Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+    if(!t.urg) t.urg='importante';
+    go('resultado');
+  }
+}
+function cTriage(){
+  const t=S.tri;
+  if(!t.cat){
+    return `<div class="appbar"><button class="back" onclick="go('home')">←</button><h1>Contactar con un mecánico<span class="sub">Paso 1 · elegí el síntoma</span></h1></div>
+    <div class="body"><div class="pad">
+      <p class="muted" style="margin-bottom:16px">Con el síntoma sabemos qué especialidad buscar. Elegí lo que más se parezca y te hacemos dos preguntas más: al final te mostramos solo los talleres que hacen ese trabajo.</p>
+      <div class="symgrid">${TRIAGE.map(c=>`<button class="sym" onclick="elegirCat('${c.id}')">
+        <span class="si">${c.ic}</span><div class="st2">${c.t}</div><div class="ss">${c.s}</div></button>`).join('')}</div>
+      <div style="height:20px"></div>
+    </div></div>`;
+  }
+  const cat=TRIAGE.find(c=>c.id===t.cat), q=cat.qs[t.paso-1], total=cat.qs.length;
+  return `<div class="appbar"><button class="back" onclick="atrasTriage()">←</button>
+    <h1>${cat.ic} ${cat.t}<span class="sub">Pregunta ${t.paso} de ${total}</span></h1></div>
+  <div class="wiz">${Array.from({length:total},(_,i)=>`<div class="${i<t.paso?'on':''}"></div>`).join('')}</div>
+  <div class="body"><div class="pad">
+    <div class="qnum">Pregunta ${t.paso}</div>
+    <div class="qq">${q.q}</div>
+    ${q.o.map((o,i)=>`<button class="qopt" onclick="responder(${i})"><span class="qt">${o.t}</span><span class="qa">›</span></button>`).join('')}
+    <div class="muted" style="margin-top:14px">Si ninguna encaja del todo, elegí la más parecida. El mecánico confirma después.</div>
+  </div></div>`;
+}
+function atrasTriage(){
+  const t=S.tri;
+  if(t.paso<=1){ t.cat=null; t.paso=0; t.resp=[]; t.votos=[]; t.urg=null; t.hints=[]; }
+  else { t.paso--; t.resp.pop(); }
+  render();
+}
+
+function cResultado(){
+  const t=S.tri, cat=TRIAGE.find(c=>c.id===t.cat), e=ESPECIALIDADES[t.esp], u=URG[t.urg];
+  const cuantos = TALLERES.filter(x=>x.esp.includes(t.esp)).length;
+  return `<div class="appbar"><button class="back" onclick="S.tri.paso=TRIAGE.find(c=>c.id===S.tri.cat).qs.length;S.tri.resp.pop();go('triage')">←</button>
+    <h1>Esto es lo que vemos<span class="sub">Orientación preliminar</span></h1></div>
+  <div class="body"><div class="pad">
+    <div class="result">
+      <div class="rl">Por lo que nos contás</div>
+      <div class="rt">${t.hints.length?'Apunta a '+t.hints[0]:'Necesita revisión mecánica'}</div>
+      <div class="rd">${cat.t} · ${t.resp.join(' · ')}</div>
+      <div class="rspec">${e.ic}&nbsp;Necesitás un especialista en <b>${e.n}</b></div>
+    </div>
+
+    <div class="alert ${t.urg==='critico'?'a-crit':t.urg==='importante'?'a-warn':'a-info'}" style="margin-bottom:16px">
+      <span class="ai">${u.s}</span><div><b>${u.n}.</b> ${u.t}.</div></div>
+
+    <div class="alert a-info" style="margin-bottom:18px"><span class="ai">ℹ️</span>
+      <div>Esto es una <b>orientación</b>, no un diagnóstico. El diagnóstico real lo hace el mecánico con el vehículo delante. Nunca te vamos a vender un repuesto sin que un mecánico lo haya confirmado.</div></div>
+
+    <div class="card" style="background:var(--surface-2)">
+      <div class="card-t">Tenemos ${cuantos} taller${cuantos>1?'es':''} en la red que hace${cuantos>1?'n':''} este trabajo</div>
+      <div class="card-s">Te los mostramos ordenados por cercanía y calificación.</div></div>
+
+    <div style="margin-top:18px"><button class="btn btn-primary" onclick="go('mecanicos')">Ver los mecánicos →</button></div>
+    <div style="margin-top:10px"><button class="btn btn-ghost" onclick="startTriage()">No es esto, empezar de nuevo</button></div>
+    <div style="height:20px"></div>
+  </div></div>`;
+}
+
+function cMecanicos(){
+  const t=S.tri, e=ESPECIALIDADES[t.esp];
+  const match = TALLERES.filter(x=>x.esp.includes(t.esp)).sort((a,b)=>a.dist-b.dist);
+  const otros = TALLERES.filter(x=>!x.esp.includes(t.esp) && x.esp.includes('general'));
+  const card = (x,m) => `<div class="card card-tap" onclick="elegirTaller('${x.id}')">
+    <div class="card-h"><div><div class="card-t">${x.n}</div>
+      <div class="card-s">${x.mec} · ${x.dist} km · ${x.zona}</div></div>
+      ${m?`<span class="badge b-match">${e.ic} Especialista</span>`:`<span class="badge b-neutral">General</span>`}</div>
+    <div class="muted" style="margin-top:8px">${x.bio}</div>
+    <div style="display:flex;gap:14px;margin-top:10px;font-size:12px">
+      <span><b>⭐ ${x.cal}</b> <span style="color:var(--ink-3)">(${x.ops} trabajos)</span></span>
+      <span style="color:var(--ok);font-weight:650">Suele dar turno: ${x.turno.toLowerCase()}</span></div>
+  </div>`;
+  return `<div class="appbar"><button class="back" onclick="go('resultado')">←</button>
+    <h1>Mecánicos para vos<span class="sub">${e.ic} ${e.n}</span></h1></div>
+  <div class="body"><div class="pad">
+    <div class="alert a-ok" style="margin-bottom:16px"><span class="ai">🎯</span>
+      <div>Filtramos la red por <b>${e.n}</b>. No te mostramos talleres que no hacen este trabajo.</div></div>
+    <div style="font-weight:800;font-size:13px;margin-bottom:10px">Especialistas (${match.length})</div>
+    ${match.map(x=>card(x,true)).join('')}
+    ${otros.length?`<div style="font-weight:800;font-size:13px;margin:20px 0 10px">También podrían verlo (${otros.length})</div>
+      ${otros.map(x=>card(x,false)).join('')}`:''}
+    <div style="height:20px"></div>
+  </div></div>`;
+}
+function elegirTaller(id){
+  S.tallerElegido = id;
+  if(!S.logged){ S.login.err=''; go('login'); return; }
+  prepararDatos();
+}
+function prepararDatos(){
+  const u=S.user;
+  S.form={taller:S.tallerElegido, marca:u.veh.marca, modelo:u.veh.modelo, anio:u.veh.anio,
+          motor:u.veh.motor, km:u.veh.km, pat:u.pat, zona:'Alta Córdoba'};
+  S.nombre=u.nombre; S.tel=u.tel; go('datos');
+}
+
+/* ---- LOGIN por patente ---- */
+function cLogin(){
+  const L=S.login;
+  return `<div class="appbar"><button class="back" onclick="go('${S.tallerElegido?'mecanicos':'home'}')">←</button>
+    <h1>Ingresar<span class="sub">Tu usuario es la patente del vehículo</span></h1></div>
+  <div class="body"><div class="pad">
+    ${S.tallerElegido?`<div class="alert a-info" style="margin-bottom:18px"><span class="ai">🔒</span>
+      <div>Para pedir el turno necesitamos una cuenta. Así el mecánico y nosotros sabemos de qué vehículo estamos hablando.</div></div>`:''}
+    <div class="field"><label>Patente *</label>
+      <input class="inp" style="text-transform:uppercase;letter-spacing:.08em;font-weight:700" value="${L.pat}"
+        oninput="S.login.pat=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" placeholder="AB123CD"></div>
+    <div class="field"><label>Contraseña *</label>
+      <input class="inp" type="password" value="${L.pass}" oninput="S.login.pass=this.value" placeholder="••••••••"></div>
+    ${L.err?`<div class="alert a-crit" style="margin-bottom:14px"><span class="ai">⚠️</span><div>${L.err}</div></div>`:''}
+    <button class="btn btn-primary" onclick="hacerLogin()">Ingresar</button>
+    <div style="margin-top:11px"><button class="btn btn-ghost" onclick="S.reg.err='';go('registro')">No tengo cuenta, quiero registrarme</button></div>
+    <div class="alert a-info" style="margin-top:18px"><span class="ai">💡</span>
+      <div><b>Demo:</b> patente <b>AB123CD</b> · contraseña <b>hilux2018</b></div></div>
+    <div style="height:20px"></div>
+  </div></div>`;
+}
+function hacerLogin(){
+  const L=S.login;
+  const u = CLIENTES.find(c=>c.pat===L.pat.trim() && c.pass===L.pass);
+  if(!u){ L.err='Patente o contraseña incorrecta. Si es la primera vez, registrate.'; render(); return; }
+  S.user=u; S.logged=true; S.nombre=u.nombre; S.tel=u.tel; S.login={pat:'',pass:'',err:''};
+  if(S.tallerElegido) prepararDatos(); else go('casos');
+  toast('Hola '+u.nombre.split(' ')[0]+'!','👋');
+}
+
+/* ---- REGISTRO con tarjeta verde ---- */
+function cRegistro(){
+  const R=S.reg;
+  const ok = R.pat.length>=6 && R.pass.length>=6 && R.pass===R.pass2 && R.nombre.length>2 && R.tel.length>=8 && R.tv;
+  return `<div class="appbar"><button class="back" onclick="go('login')">←</button>
+    <h1>Crear cuenta<span class="sub">Una cuenta por vehículo</span></h1></div>
+  <div class="body"><div class="pad">
+    <div class="alert a-info" style="margin-bottom:18px"><span class="ai">🚗</span>
+      <div>Tu <b>usuario es la patente</b>. Si tenés más de un vehículo, creás una cuenta por cada uno: así el historial de cada auto queda separado.</div></div>
+
+    <div class="field"><label>Patente (será tu usuario) *</label>
+      <input class="inp" style="text-transform:uppercase;letter-spacing:.08em;font-weight:700" value="${R.pat}"
+        oninput="S.reg.pat=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');render()" placeholder="AB123CD"></div>
+    <div class="grid2">
+      <div class="field"><label>Contraseña *</label>
+        <input class="inp" type="password" value="${R.pass}" oninput="S.reg.pass=this.value;render()" placeholder="mín. 6"></div>
+      <div class="field"><label>Repetir *</label>
+        <input class="inp" type="password" value="${R.pass2}" oninput="S.reg.pass2=this.value;render()" placeholder="mín. 6"></div>
+    </div>
+    ${R.pass&&R.pass2&&R.pass!==R.pass2?`<div class="muted" style="color:var(--crit);margin:-8px 0 14px">Las contraseñas no coinciden.</div>`:''}
+    <div class="field"><label>Nombre y apellido *</label>
+      <input class="inp" value="${R.nombre}" oninput="S.reg.nombre=this.value;render()" placeholder="Facundo Ruiz"></div>
+    <div class="field"><label>WhatsApp *</label>
+      <input class="inp" value="${R.tel}" oninput="S.reg.tel=this.value;render()" placeholder="+54 351 245-0332">
+      <div class="muted" style="margin-top:6px">Lo usamos para avisarte que tenés un mensaje nuevo en el chat de la app.</div></div>
+
+    <div class="hr"></div>
+    <div style="font-weight:800;font-size:14px;margin-bottom:4px">📄 Foto de la tarjeta verde *</div>
+    <div class="muted" style="margin-bottom:12px">Con la tarjeta verde sabemos el modelo, el motor y el año exactos. Es lo que evita que te vendamos el repuesto equivocado.</div>
+    ${R.tv?`<div class="card" style="border-color:var(--ok);background:var(--ok-soft)">
+      <div class="card-h"><div><div class="card-t">✅ ${R.pat||'archivo'}_tarjeta_verde.jpg</div>
+        <div class="card-s">Se guarda en el Drive de Fratello</div></div>
+        <button style="color:var(--crit);font-size:12px;font-weight:650" onclick="S.reg.tv=null;render()">Quitar</button></div></div>`
+    :`<button class="btn btn-ghost" style="padding:24px 18px;flex-direction:column;gap:6px" onclick="S.reg.tv=true;render()">
+       <span style="font-size:26px">📷</span><span>Tomar foto o subir archivo</span>
+       <span class="muted">JPG o PDF · máx. 8 MB</span></button>`}
+
+    <div class="alert a-warn" style="margin:16px 0"><span class="ai">🔒</span>
+      <div>La tarjeta verde tiene datos personales tuyos. La guardamos cifrada, solo la ve el mostrador de Fratello para identificar tu vehículo, y podés pedir que la borremos cuando quieras (Ley 25.326).</div></div>
+
+    <div class="field"><label class="checkline"><input type="checkbox" id="rcons">
+      <span>Acepto la <u>política de privacidad</u> y que Fratello guarde la foto de mi tarjeta verde para identificar el vehículo.</span></label></div>
+
+    <button class="btn btn-primary" ${ok?'':'disabled'} onclick="hacerRegistro()">Crear cuenta</button>
+    ${ok?'':'<div class="muted" style="text-align:center;margin-top:10px">Completá todos los campos y subí la tarjeta verde.</div>'}
+    <div style="height:20px"></div>
+  </div></div>`;
+}
+function hacerRegistro(){
+  if(!$('#rcons').checked){ toast('Tenés que aceptar la política de privacidad','⚠'); return; }
+  const R=S.reg;
+  if(CLIENTES.find(c=>c.pat===R.pat)){ toast('Ya existe una cuenta con esa patente','⚠'); return; }
+  const u={pat:R.pat, pass:R.pass, nombre:R.nombre, tel:R.tel,
+    veh:{marca:'',modelo:'',anio:'',motor:'',km:''},
+    tv:{arch:R.pat+'_tarjeta_verde.jpg', drive:'drive.google.com/fratello/tv/'+R.pat,
+        subida:'recién', titular:R.nombre, verif:false}, casos:0, nuevo:true};
+  CLIENTES.push(u);
+  S.user=u; S.logged=true; S.nombre=u.nombre; S.tel=u.tel;
+  S.reg={pat:'',pass:'',pass2:'',nombre:'',tel:'',tv:null,err:''};
+  if(S.tallerElegido) prepararDatos(); else go('casos');
+  toast('Cuenta creada. La tarjeta verde se subió al Drive.','📄');
+}
+
+function cCuenta(){
+  const u=S.user;
+  return `<div class="appbar"><button class="back" onclick="go('home')">←</button>
+    <h1>Mi cuenta<span class="sub">${u.pat}</span></h1></div>
+  <div class="body"><div class="pad">
+    <dl><div class="dl"><dt>Usuario (patente)</dt><dd class="mono">${u.pat}</dd></div>
+    <div class="dl"><dt>Nombre</dt><dd>${u.nombre}</dd></div>
+    <div class="dl"><dt>WhatsApp</dt><dd class="mono">${u.tel}</dd></div>
+    <div class="dl"><dt>Tarjeta verde</dt><dd>${u.tv.verif?'✅ verificada':'⏳ en revisión'}</dd></div></dl>
+    <div class="alert a-info" style="margin-top:16px"><span class="ai">🔒</span>
+      <div>Podés pedir acceso, rectificación o supresión de tus datos cuando quieras (Ley 25.326, arts. 14–16).</div></div>
+    <div style="margin-top:16px"><button class="btn btn-primary" onclick="nuevoTurno()">➕ &nbsp;Pedir un turno nuevo</button></div>
+    <div style="margin-top:10px"><button class="btn btn-ghost" onclick="S.logged=false;S.user=null;go('home')">Cerrar sesión</button></div>
+  </div></div>`;
+}
+
+function cDatos(){
+  const f=S.form, x=tal(f.taller), ok=validNow();
+  return `<div class="appbar"><button class="back" onclick="go('mecanicos')">←</button>
+    <h1>Pedir turno<span class="sub">${x.n} · ${x.mec}</span></h1></div>
+  <div class="body"><div class="pad">
+    <div class="card" style="background:var(--surface-2);margin-bottom:18px">
+      <div class="card-t">${x.n}</div><div class="card-s">${x.mec} · ${x.dist} km · ⭐ ${x.cal}</div>
+      <div class="card-s" style="margin-top:5px">Disponibilidad habitual: ${x.turno.toLowerCase()}</div></div>
+    <div class="alert a-info" style="margin-bottom:16px"><span class="ai">📅</span>
+      <div><b>El turno te lo da el mecánico.</b> Nosotros le pasamos el caso con el triage que hiciste; ${x.mec.split(' ')[0]} mira su agenda y te confirma día y hora por el chat. Nunca te reservamos un horario por nuestra cuenta.</div></div>
+
+    <div class="alert a-ok" style="margin-bottom:16px"><span class="ai">✅</span>
+      <div>Entraste como <b>${S.user?S.user.pat:''}</b> — ${S.nombre}. Tomamos los datos de tu tarjeta verde; confirmá que estén bien.</div></div>
+    <div style="font-weight:800;font-size:13px;margin-bottom:11px">Tu vehículo</div>
+    <div class="grid2">
+      <div class="field"><label>Marca *</label><select class="inp" onchange="S.form.marca=this.value;render()">
+        <option value="">Elegir…</option>${['Toyota','Volkswagen','Ford','Chevrolet','Renault','Peugeot','Fiat','Nissan','Audi','Otra'].map(m=>`<option ${f.marca===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      <div class="field"><label>Modelo *</label><input class="inp" value="${f.modelo}" oninput="S.form.modelo=this.value;sync()" placeholder="Hilux"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Año *</label><select class="inp" onchange="S.form.anio=this.value;render()">
+        <option value="">—</option>${Array.from({length:27},(_,i)=>2026-i).map(y=>`<option ${f.anio==y?'selected':''}>${y}</option>`).join('')}</select></div>
+      <div class="field"><label>Motor <span class="opt">(si sabés)</span></label><input class="inp" value="${f.motor}" oninput="S.form.motor=this.value;sync()" placeholder="3.0 TDi"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Kilometraje *</label><input class="inp" type="number" value="${f.km}" oninput="S.form.km=this.value;sync()" placeholder="187400"></div>
+      <div class="field"><label>Patente <span class="opt">(tu usuario)</span></label>
+        <input class="inp mono" value="${f.pat}" readonly style="background:var(--surface-2);font-weight:700;letter-spacing:.06em"></div>
+    </div>
+
+    <div class="hr"></div>
+    <div style="font-weight:800;font-size:13px;margin-bottom:11px">Tus datos de contacto</div>
+    <div class="field"><label>Nombre</label><input class="inp" value="${S.nombre}" oninput="S.nombre=this.value;sync()"></div>
+    <div class="field"><label>WhatsApp</label><input class="inp" value="${S.tel}" oninput="S.tel=this.value;sync()"></div>
+
+    <div class="alert a-wa" style="margin-bottom:16px"><span class="ai">💬</span>
+      <div>El seguimiento y las opciones de repuesto los vas a tener en el <b>chat del caso</b>, dentro de la app. El celular lo usamos solo para avisarte que tenés un mensaje.</div></div>
+
+    <button id="cta" class="btn btn-primary" ${ok?'':'disabled'} onclick="reservar()">Pedir turno al taller</button>
+    ${ok?'':'<div id="ctahint" class="muted" style="text-align:center;margin-top:10px">Completá los campos marcados con *</div>'}
+    <div class="muted" style="text-align:center;margin-top:10px">Pedir turno es gratis y no te compromete. No pagás nada ahora.</div>
+    <div style="height:20px"></div>
+  </div></div>`;
+}
+function reservar(){
+  const f=S.form, t=S.tri;
+  if(S.user){ S.user.casos=(S.user.casos||0)+1; S.user.veh={marca:f.marca,modelo:f.modelo,anio:+f.anio,motor:f.motor||'—',km:+f.km}; }
+  const nuevo={
+    id:'FR-00'+(ID++), estado:0, turno:null, cliente:S.nombre, tel:S.tel,
+    veh:{marca:f.marca,modelo:f.modelo,anio:+f.anio,motor:f.motor||'—',km:+f.km,pat:f.pat},
+    cat:t.cat, resp:t.resp.slice(), esp:t.esp, urg:t.urg, hint:t.hints[0]||null,
+    taller:f.taller, zona:f.zona, diag:null, pedido:[], manoObra:'', creado:'recién', nuevo:true,
+    chat:{cli:[
+      SYS('Pedido de turno enviado a '+tal(f.taller).n+' · '+horaAhora()),
+      M('fratello','Hola '+S.nombre.split(' ')[0]+', soy Sofía del mostrador. Le pasé tu caso a '
+        +tal(f.taller).mec+'. El día y la hora los define él según cómo tenga el taller: apenas te dé el turno te aviso por acá.',horaAhora()),
+    ], mec:[
+      M('fratello',tal(f.taller).mec.split(' ')[0]+', te entra un '+f.marca+' '+f.modelo+' '+f.anio
+        +'. Triage de la app: '+ESPECIALIDADES[t.esp].n+'. El cliente dice: '+t.resp.join(' · ')+'. Dale turno cuando puedas.',horaAhora()),
+    ]},
+  };
+  S.casos.unshift(nuevo);
+  S.cliCaso=nuevo.id; S.tri=null; S.form=null; S.tallerElegido=null;
+  go('caso'); toast('Pedido de turno enviado al taller.','📅');
+}
+
+function cCasos(){
+  const mios=S.casos.filter(c=>c.cliente===S.nombre||c.cliente==='Facundo Ruiz'||c.directo);
+  const pend=mios.filter(c=>c.estado===1&&c.turno&&!c.turno.ok).length;
+  return `<div class="appbar"><button class="back" onclick="go('home')">←</button><h1>Mis casos<span class="sub">${mios.length} en total</span></h1></div>
+  <div class="body"><div class="pad">
+    ${pend?`<div class="alert a-warn" style="margin-bottom:14px"><span class="ai">📅</span>
+      <div><b>Tenés ${pend} turno${pend>1?'s':''} esperando que lo confirmes.</b> Hasta que no lo confirmes el taller no te lo reserva.</div></div>`:''}
+    <button class="btn btn-primary" style="margin-bottom:16px" onclick="nuevoTurno()">➕ &nbsp;Pedir un turno nuevo</button>
+    <div class="muted" style="text-align:center;margin:-9px 0 16px">Con tu vehículo ya cargado. Te hacemos dos preguntas para mandarte al especialista correcto.</div>
+    ${mios.map(c=>`<div class="card card-tap" onclick="abrirCaso('${c.id}')">
+      <div class="card-h"><div><div class="card-t">${c.veh.marca} ${c.veh.modelo} ${c.veh.anio}</div>
+      <div class="card-s">${c.id} · ${c.veh.pat}</div></div>
+      <span class="badge ${estadoDe(c).c}">${estadoDe(c).n}</span></div>
+      <div class="card-s" style="margin-top:8px;color:var(--ink-2)">${ESPECIALIDADES[c.esp].ic} ${ESPECIALIDADES[c.esp].n}</div>
+      <div class="muted" style="margin-top:9px;display:flex;gap:7px;align-items:center">
+        <span>💬</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ultimoTxt(c)}</span></div>
+      ${c.estado===4?`<div style="margin-top:10px"><button class="btn btn-primary btn-sm" style="width:100%"
+        onclick="event.stopPropagation();abrirChat('${c.id}')">📋 Ver la cotización en el chat</button></div>`:''}
+    </div>`).join('')}
+    <div style="height:20px"></div>
+  </div></div>`;
+}
+function abrirCaso(id){ S.cliCaso=id; go('caso'); }
+/* Turno nuevo para un cliente que ya tiene cuenta: se saltea el registro,
+   pero NO el triage: sin síntomas el mostrador no sabe a qué especialista
+   derivarlo ni el mecánico con qué expectativa recibe el vehículo. */
+function nuevoTurno(){
+  S.otraFecha=null; S.tallerElegido=null; S.form=null;
+  startTriage();
+}
+/* Resumen de una línea del último mensaje del hilo del cliente */
+function ultimoTxt(c){
+  const a=hilo(c,'cli'); if(!a.length) return 'Escribinos cualquier duda por acá.';
+  const u=a[a.length-1];
+  if(u.tipo==='cot') return '📋 Último: la cotización con las opciones';
+  const q = u.de==='fratello'?'Fratello':u.de==='cliente'?'Vos':'';
+  const t = u.foto&&!u.txt?'📷 Foto':u.txt;
+  return (q?q+': ':'')+(t.length>62?t.slice(0,62)+'…':t);
+}
+const MOTIVOS = ['Es muy lejos en el tiempo, lo necesito antes',
+                 'No puedo ese día o a esa hora',
+                 'Ya no me hace falta por ahora'];
+/* El turno no queda tomado hasta que el cliente lo confirma. Si la fecha
+   no le sirve el caso vuelve al estado 0 y el mecánico propone otra. */
+function aceptarTurno(id){
+  const c=caso(id), t=tal(c.taller);
+  c.turno.ok=true; S.otraFecha=null;
+  decir(c,'cli',SYS('Turno confirmado por vos · '+c.turno.largo+' '+c.turno.h));
+  decir(c,'cli',M('cliente','Confirmado, ahí voy.',horaAhora()));
+  decir(c,'mec',M('fratello','El cliente confirmó el turno del '+c.turno.largo+' a las '+c.turno.h+'. Te lo dejo agendado.',horaAhora()));
+  render(); toast('Turno confirmado. Te esperan en el taller.','✅');
+}
+function pedirOtraFecha(id){
+  const c=caso(id), o=S.otraFecha, t=tal(c.taller);
+  const previo = c.turno ? c.turno.largo+' '+c.turno.h : '';
+  c.rechazo={motivo:o.motivo, txt:o.txt.trim(), previo};
+  c.turno=null; c.estado=0; S.otraFecha=null;
+  decir(c,'cli',M('cliente','No me sirve el '+previo+'. '+o.motivo+'.'+(o.txt.trim()?' '+o.txt.trim():''),horaAhora()));
+  decir(c,'cli',SYS('Pediste otra fecha · el taller busca otro hueco'));
+  decir(c,'cli',M('fratello','Sin problema, se lo paso a '+(t?t.mec.split(' ')[0]:'el taller')+' para que te proponga otra fecha.',horaAhora()));
+  decir(c,'mec',M('fratello','El cliente no puede el '+previo+': '+o.motivo.toLowerCase()+'.'
+    +(o.txt.trim()?' Agregó: “'+o.txt.trim()+'”.':'')+' ¿Le das otro hueco?',horaAhora()));
+  render(); toast('Le pedimos otra fecha al taller.','↩️');
+}
+function abrirChat(id){ S.chatCaso=id; S.chatDraft=''; go('chat'); }
+
+/* ---- CHAT DEL CLIENTE CON EL MOSTRADOR ---- */
+function cChat(){
+  const c=caso(S.chatCaso); if(!c) return cHome();
+  return `<div class="appbar"><button class="back" onclick="S.cliCaso='${c.id}';go('caso')">←</button>
+    <h1>${c.id}<span class="sub">${c.veh.marca} ${c.veh.modelo} · ${c.veh.pat}</span></h1></div>
+  ${chatHeader(estadoDe(c).n)}
+  <div class="chat-wrap">
+    <div class="chat-scroll">${burbujas(c,'cli','cliente')}</div>
+    ${chatInput(c.id,'cli','cliente')}
+  </div>`;
+}
+
+function track(e,c){
+  const pasos = c && c.directo
+    ? [[3,'Pedido enviado al mostrador','Verificamos la aplicación por patente'],
+       [4,'Te escribimos por WhatsApp','Con las opciones y sus precios'],
+       [5,'Confirmado y pagado','Preparamos el pedido'],
+       [6,'Preparado','Listo para retirar o enviar'],
+       [7,'Entregado','Pedido cerrado']]
+    : [[0,'Pedido de turno enviado'],
+       c&&c.turno&&c.turno.ok
+         ? [1,'Turno confirmado','El taller te espera']
+         : [1,'Turno propuesto por el taller','Confirmalo o pedile otra fecha'],
+       [2,'En el taller'],[3,'El mecánico pidió los repuestos'],
+       [4,'Fratello te pasó la cotización'],[5,'Confirmado y pagado'],[6,'En reparación'],[7,'Listo']];
+  return `<div class="track">${pasos.map(([n,t,d])=>{
+    const k = e>n?'done':(e===n?'now':'');
+    const det = d || (EST[n]?EST[n].d:'');
+    return `<div class="tr-i ${k}"><div class="td">${e>n?'✓':''}</div>
+      <div><div class="tt">${t}</div>${e===n?`<div class="ts">${det}</div>`:''}</div></div>`;
+  }).join('')}</div>`;
+}
+
+function cCaso(){
+  const c=caso(S.cliCaso); if(!c) return cHome();
+  const x=tal(c.taller), e=ESPECIALIDADES[c.esp], u=URG[c.urg];
+  const cat=TRIAGE.find(k=>k.id===c.cat);
+  return `<div class="appbar"><button class="back" onclick="go('casos')">←</button>
+    <h1>${c.id}<span class="sub">${c.veh.marca} ${c.veh.modelo} ${c.veh.anio}</span></h1></div>
+  <div class="body">${track(c.estado,c)}<div class="pad">
+
+    ${c.estado===0&&x?`<div class="alert a-warn" style="margin-bottom:16px"><span class="ai">⏳</span>
+      <div><b>Esperando que ${x.mec.split(' ')[0]} te dé el turno.</b> Ya tiene tu caso con el triage que hiciste. Él mira su agenda y te confirma día y hora por el chat: nosotros no le reservamos horarios.
+      ${c.nuevo?`<br><br><button style="text-decoration:underline;font-weight:750" onclick="S.role='mecanico';S.mec='home';render()">💡 Pasá a la vista Mecánico para darte el turno →</button>`:''}</div></div>`:''}
+
+    ${c.estado===1&&x&&c.turno&&!c.turno.ok?`<div class="alert a-warn" style="margin-bottom:16px"><span class="ai">📅</span>
+      <div><b>${x.mec.split(' ')[0]} te propone el ${c.turno.largo} a las ${c.turno.h}.</b>
+      ${c.turno.nota?`<br>Indicación del taller: ${c.turno.nota}`:''}
+      <br><br>El turno todavía no está tomado: se reserva recién cuando vos lo confirmás. Si te queda muy lejos en el tiempo o no podés ese día, pedile otra fecha y él busca otro hueco.
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="aceptarTurno('${c.id}')">Confirmo, ahí voy</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="S.otraFecha={caso:'${c.id}',motivo:'',txt:''};render();setTimeout(()=>{const e=document.getElementById('otrafecha');if(e)e.scrollIntoView({behavior:'smooth',block:'center'})},70)">No me sirve</button>
+      </div></div></div>`:''}
+
+    ${S.otraFecha&&S.otraFecha.caso===c.id?`<div id="otrafecha" class="card" style="margin-bottom:16px;border-color:var(--brand)">
+      <div style="font-weight:800;font-size:14.5px;margin-bottom:3px">Pedir otra fecha</div>
+      <div class="muted" style="margin-bottom:11px">Contale al taller por qué no te sirve. Cuanto más claro seas, mejor va a ser la fecha que te proponga.</div>
+      ${MOTIVOS.map(m=>`<label class="checkline" style="margin-bottom:9px">
+        <input type="radio" name="mot" ${S.otraFecha.motivo===m?'checked':''} onchange="S.otraFecha.motivo='${m}';render()">
+        <span>${m}</span></label>`).join('')}
+      <div class="field" style="margin:11px 0 0"><label>Algo más que quieras aclarar <span class="opt">(opc.)</span></label>
+        <textarea class="inp" style="min-height:60px" oninput="S.otraFecha.txt=this.value"
+          placeholder="Puedo cualquier día a la mañana temprano.">${S.otraFecha.txt}</textarea></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary btn-sm" style="flex:2" ${S.otraFecha.motivo?'':'disabled'} onclick="pedirOtraFecha('${c.id}')">Enviar al taller</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="S.otraFecha=null;render()">Cancelar</button>
+      </div></div>`:''}
+
+    ${c.estado===1&&x&&c.turno&&c.turno.ok?`<div class="alert a-ok" style="margin-bottom:16px"><span class="ai">✅</span>
+      <div><b>Turno confirmado en ${x.n}.</b> ${x.mec.split(' ')[0]} te espera el <b>${c.turno.largo} a las ${c.turno.h}</b>. Llevá el vehículo y él hace el diagnóstico.
+      ${c.turno.nota?`<br><br><b>Indicaciones del taller:</b> ${c.turno.nota}`:''}
+      ${c.nuevo?`<br><br><button style="text-decoration:underline;font-weight:750" onclick="S.role='mecanico';S.mec='home';render()">💡 Pasá a la vista Mecánico para seguir el flujo →</button>`:''}</div></div>`:''}
+
+    ${c.estado===0&&c.rechazo?`<div class="alert a-info" style="margin-bottom:16px"><span class="ai">↩️</span>
+      <div><b>Le pediste otra fecha al taller.</b> Motivo: ${c.rechazo.motivo.toLowerCase()}. Está buscando otro hueco y te avisa por el chat.</div></div>`:''}
+
+    ${x?`<div class="card" style="background:var(--surface-2);margin-bottom:16px">
+      <div class="card-h"><div><div class="card-t">${x.n}</div>
+        <div class="card-s">${x.mec} · ⭐ ${x.cal} · ${x.dist} km</div></div><span>🔧</span></div>
+      <div class="muted" style="margin-top:8px">${e.ic} ${e.n}</div></div>`
+     :`<div class="card" style="background:var(--surface-2);margin-bottom:16px">
+      <div class="card-h"><div><div class="card-t">Pedido directo de mostrador</div>
+        <div class="card-s">Sin taller asociado · lo cotiza Fratello</div></div><span>🔩</span></div></div>`}
+
+    <div style="margin-bottom:16px"><button class="btn btn-primary" onclick="abrirChat('${c.id}')">
+      💬 &nbsp;Abrir el chat del caso</button>
+      <div class="muted" style="text-align:center;margin-top:8px">${ultimoTxt(c)}</div></div>
+
+
+    <div class="field"><label>${c.directo?'Lo que pediste':'Lo que nos contaste'}</label>
+      <div style="font-size:13.5px;color:var(--ink-2);line-height:1.55">
+        <b>${cat?cat.ic+' '+cat.t:''}</b>${cat?'<br>':''}${c.resp.map(r=>'· '+r).join('<br>')}</div>
+      <div style="margin-top:8px"><span class="badge ${u.c}">${u.s} ${u.n}</span></div></div>
+
+    ${c.diag&&!c.directo?`<div class="hr"></div>
+      <div style="font-weight:800;font-size:15px;margin-bottom:9px">🔍 Diagnóstico del mecánico</div>
+      <p style="font-size:13.5px;line-height:1.6;color:var(--ink-2)">${c.diag}</p>`:''}
+
+    ${c.pedido.length?`<div class="hr"></div>
+      <div style="font-weight:800;font-size:15px;margin-bottom:3px">🔩 ${c.directo?'Repuestos que pediste':'Repuestos que pidió el mecánico'}</div>
+      <div class="muted" style="margin-bottom:5px">Los precios te los publicamos en el chat del caso.</div>
+      ${c.pedido.map(p=>`<div class="itemrow"><div class="ic">${rub(p.rubro).ic}</div>
+        <div class="in"><div class="it">${p.desc}</div><div class="is">${rub(p.rubro).n} · cantidad ${p.cant}</div></div></div>`).join('')}
+      ${c.criterio?`<div class="alert a-info" style="margin-top:12px"><span class="ai">${CRITERIO[c.criterio].s}</span>
+        <div><b>El mecánico registró: ${CRITERIO[c.criterio].n.toLowerCase()}.</b> Con eso armamos la recomendación.
+        Si no es lo que querías, escribinos por el chat del caso y lo cambiamos.</div></div>`:''}`:''}
+
+    ${c.estado===3?`<div class="alert a-warn" style="margin-top:16px"><span class="ai">⏳</span>
+      <div><b>Estamos armando las opciones.</b> En menos de 4 horas hábiles te llegan al chat del caso, con dos o tres alternativas y sus precios.
+      <br><br><button style="text-decoration:underline;font-weight:750" onclick="S.role='fratello';S.fraCaso='${c.id}';S.fra='pedidos';render()">💡 Pasá al Panel Fratello para armarlas →</button></div></div>`:''}
+
+    ${c.estado===4?`<div class="alert a-info" style="margin-top:16px"><span class="ai">📋</span>
+      <div><b>Tenés la cotización en el chat.</b> Respondé cuál opción preferís y coordinamos el pago por ahí mismo.</div></div>`:''}
+
+    ${c.estado>=5?`<div class="alert a-ok" style="margin-top:16px"><span class="ai">✅</span>
+      <div><b>Confirmado.</b> ${c.estado>=6?'El repuesto ya está en el taller.':'Preparamos el pedido y lo mandamos al taller.'}</div></div>`:''}
+
+    <div class="hr"></div>
+    <dl><div class="dl"><dt>Caso creado</dt><dd>${c.creado}</dd></div>
+    ${c.turno?`<div class="dl"><dt>Turno que dio el taller</dt><dd>${c.turno.largo} · ${c.turno.h}</dd></div>`
+      :x?`<div class="dl"><dt>Turno</dt><dd>a confirmar por el taller</dd></div>`:''}
+    ${c.pedidoEn?`<div class="dl"><dt>Repuestos pedidos</dt><dd>${c.pedidoEn}</dd></div>`:''}
+    ${c.cotEnviada?`<div class="dl"><dt>Cotización enviada</dt><dd>${c.cotEnviada}</dd></div>`:''}
+    <div class="dl"><dt>Estado</dt><dd>${estadoDe(c).n}</dd></div></dl>
+    <div style="height:20px"></div>
+  </div></div>`;
+}
+
+/* ==========================================================
+   FLUJO 2 — SOLO REPUESTOS (cotización directa de mostrador)
+   El cliente ya sabe qué necesita. No hay triage ni taller:
+   entra derecho a la cola del mostrador de Fratello.
+   ========================================================== */
+let RI=0;
+const nuevoRep = () => ({id:'d'+(++RI), rubro:'', desc:'', oem:'', cant:1});
+
+function irRepuestos(){
+  if(!S.rep){
+    const u=S.user;
+    S.rep={
+      items:[nuevoRep()], nota:'', enviado:null,
+      veh: u ? {marca:u.veh.marca||'',modelo:u.veh.modelo||'',anio:u.veh.anio||'',motor:u.veh.motor||'',pat:u.pat}
+             : {marca:'',modelo:'',anio:'',motor:'',pat:''},
+    };
+  }
+  go('repuestos');
+}
+function repOk(){
+  const R=S.rep; if(!R) return false;
+  const contacto = S.logged || (S.nombre.length>2 && S.tel.length>=8);
+  return !!(R.veh.marca && R.veh.modelo && R.veh.anio && R.veh.pat.length>=6
+         && R.items.some(i=>i.rubro && i.desc.trim().length>2) && contacto);
+}
+function cRepuestos(){
+  const R=S.rep;
+  if(R.enviado) return cRepEnviado();
+  const ok=repOk();
+  const criticos = R.items.filter(i=>i.rubro && rub(i.rubro).crit);
+  return `<div class="appbar"><button class="back" onclick="go('home')">←</button>
+    <h1>Solo repuestos<span class="sub">Cotización directa del mostrador</span></h1></div>
+  <div class="body"><div class="pad">
+
+    <div class="alert a-info" style="margin-bottom:16px"><span class="ai">🔩</span>
+      <div><b>Este camino es para cuando ya sabés qué necesitás:</b> te lo dijo tu mecánico, tenés el número de pieza,
+      o es un repuesto de mantenimiento (filtros, aceite, batería, cubiertas). Cotizamos y te contestamos en el chat del pedido.</div></div>
+
+    <div style="font-weight:800;font-size:13px;margin-bottom:11px">🚗 Para qué vehículo</div>
+    ${S.logged?`<div class="alert a-ok" style="margin-bottom:13px"><span class="ai">✅</span>
+      <div>Tomamos los datos de la tarjeta verde de <b>${S.user.pat}</b>. Revisá que estén bien.</div></div>`:''}
+    <div class="grid2">
+      <div class="field"><label>Marca *</label><select class="inp" onchange="S.rep.veh.marca=this.value;render()">
+        <option value="">Elegir…</option>${['Toyota','Volkswagen','Ford','Chevrolet','Renault','Peugeot','Fiat','Nissan','Audi','Otra']
+          .map(m=>`<option ${R.veh.marca===m?'selected':''}>${m}</option>`).join('')}</select></div>
+      <div class="field"><label>Modelo *</label>
+        <input class="inp" value="${R.veh.modelo}" oninput="S.rep.veh.modelo=this.value;syncRep()" placeholder="Hilux"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Año *</label><select class="inp" onchange="S.rep.veh.anio=this.value;render()">
+        <option value="">—</option>${Array.from({length:27},(_,i)=>2026-i).map(y=>`<option ${R.veh.anio==y?'selected':''}>${y}</option>`).join('')}</select></div>
+      <div class="field"><label>Motor <span class="opt">(si sabés)</span></label>
+        <input class="inp" value="${R.veh.motor}" oninput="S.rep.veh.motor=this.value;syncRep()" placeholder="3.0 TDi"></div>
+    </div>
+    <div class="field"><label>Patente *</label>
+      <input class="inp mono" style="text-transform:uppercase;letter-spacing:.07em;font-weight:700" value="${R.veh.pat}"
+        oninput="S.rep.veh.pat=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');syncRep()" placeholder="AB123CD">
+      <div class="muted" style="margin-top:6px">Con la patente cerramos la versión exacta. Una Hilux 2018 puede ser 2.4 o 3.0 y el repuesto cambia.</div></div>
+
+    <div class="hr"></div>
+    <div style="font-weight:800;font-size:15px;margin-bottom:3px">🧾 Qué necesitás</div>
+    <div class="muted" style="margin-bottom:13px">Pedilo con tus palabras. Si tenés el número de pieza mejor, pero no es obligatorio.</div>
+
+    ${R.items.map((it,ix)=>`<div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+        <div style="font-weight:750;font-size:12.5px;color:var(--ink-3)">Repuesto ${ix+1}</div>
+        ${R.items.length>1?`<button style="color:var(--crit);font-size:12px;font-weight:650"
+          onclick="S.rep.items.splice(${ix},1);render()">Quitar</button>`:''}
+      </div>
+      <div class="field"><label>Rubro *</label>
+        <div class="rubgrid">${RUBROS.map(x=>`<button class="rubb ${it.rubro===x.id?'on':''}"
+          onclick="S.rep.items[${ix}].rubro='${x.id}';render()">
+          <span class="rbi">${x.ic}</span><span class="rbn">${x.n}${x.crit?' 🛡':''}</span></button>`).join('')}</div></div>
+      <div class="field"><label>Qué necesitás *</label>
+        <input class="inp" value="${it.desc}" oninput="S.rep.items[${ix}].desc=this.value;syncRep()"
+          placeholder="Juego de pastillas delanteras"></div>
+      <div class="grid2">
+        <div class="field"><label>N° de pieza <span class="opt">(opc.)</span></label>
+          <input class="inp" value="${it.oem}" oninput="S.rep.items[${ix}].oem=this.value;syncRep()" placeholder="04465-0K260"></div>
+        <div class="field" style="margin-bottom:0"><label>Cantidad</label>
+          <input class="inp" type="number" min="1" value="${it.cant}" oninput="S.rep.items[${ix}].cant=+this.value||1;syncRep()"></div>
+      </div>
+    </div>`).join('')}
+    <button class="btn btn-ghost" onclick="S.rep.items.push(nuevoRep());render()">+ Agregar otro repuesto</button>
+
+    ${criticos.length?`<div class="alert a-warn" style="margin-top:16px"><span class="ai">🛡</span>
+      <div><b>Ojo: ${criticos.map(i=>rub(i.rubro).n.toLowerCase()).join(', ')} ${criticos.length>1?'son rubros':'es un rubro'} de seguridad crítica.</b>
+      Te lo cotizamos igual, pero sin diagnóstico previo no ofrecemos línea económica. Si tenés dudas de qué lleva,
+      conviene que lo vea un mecánico primero.
+      <br><button style="text-decoration:underline;font-weight:750;margin-top:6px" onclick="startTriage()">Prefiero que lo vea un mecánico →</button></div></div>`:''}
+
+    <div class="field" style="margin-top:18px"><label>Algo más que debamos saber <span class="opt">(opc.)</span></label>
+      <textarea class="inp" style="min-height:66px" oninput="S.rep.nota=this.value;syncRep()"
+        placeholder="Hago mucha ruta con carga, prefiero primera línea.">${R.nota}</textarea></div>
+
+    ${!S.logged?`<div class="hr"></div>
+      <div style="font-weight:800;font-size:13px;margin-bottom:11px">💬 Adónde te mandamos el precio</div>
+      <div class="field"><label>Nombre *</label>
+        <input class="inp" value="${S.nombre}" oninput="S.nombre=this.value;syncRep()" placeholder="Facundo Ruiz"></div>
+      <div class="field"><label>WhatsApp *</label>
+        <input class="inp" value="${S.tel}" oninput="S.tel=this.value;syncRep()" placeholder="+54 351 245-0332">
+        <div class="muted" style="margin-top:6px">Para cotizar no hace falta cuenta. La cuenta con tarjeta verde la vas a necesitar recién cuando pidas turno en un taller.</div></div>`:''}
+
+    <button id="cta" class="btn btn-primary" ${ok?'':'disabled'} onclick="enviarRepuestos()">💬 &nbsp;Pedir cotización</button>
+    ${ok?'':'<div id="ctahint" class="muted" style="text-align:center;margin-top:10px">Completá el vehículo, la patente, al menos un repuesto con rubro y tu contacto.</div>'}
+    <div class="muted" style="text-align:center;margin-top:10px">Cotizar es gratis y no te compromete a comprar.</div>
+    <div style="height:24px"></div>
+  </div></div>`;
+}
+function syncRep(){
+  const b=$('#cta'); if(b) b.disabled=!repOk();
+  const h=$('#ctahint'); if(h) h.style.display=repOk()?'none':'block';
+}
+function enviarRepuestos(){
+  const R=S.rep;
+  const nuevo={
+    id:'FR-00'+(ID++), estado:3, directo:true,
+    cliente:S.nombre||(S.user?S.user.nombre:'Cliente sin cuenta'),
+    tel:S.tel||(S.user?S.user.tel:'+54 351 000-0000'),
+    veh:{marca:R.veh.marca,modelo:R.veh.modelo,anio:+R.veh.anio,motor:R.veh.motor||'—',km:0,pat:R.veh.pat},
+    cat:null, resp:['Pedido directo de mostrador — el cliente ya sabía qué necesitaba'],
+    esp:'general', urg:'preventivo', taller:null, zona:'—',
+    diag:'Pedido directo del cliente, sin diagnóstico de taller. Verificar aplicación por patente antes de cotizar.',
+    nota:R.nota||'', pedido:R.items.filter(i=>i.rubro&&i.desc).map(i=>({...i, ecoOk:false, ops:[]})),
+    manoObra:'', creado:'recién', pedidoEn:'recién',
+    chat:{cli:[
+      SYS('Pedido directo enviado al mostrador · '+horaAhora()),
+      M('fratello','Hola '+(S.nombre||'').split(' ')[0]+', recibí tu pedido. Verifico la aplicación exacta por patente y te paso las opciones por acá.'
+        +(R.nota?' Tomé nota de lo que aclaraste.':''),horaAhora()),
+    ], mec:[]},
+  };
+  S.casos.unshift(nuevo);
+  S.rep.enviado=nuevo.id;
+  render(); toast('Pedido enviado al mostrador de Fratello','📤');
+}
+function cRepEnviado(){
+  const c=caso(S.rep.enviado);
+  return `<div class="appbar"><button class="back" onclick="S.rep=null;go('home')">←</button>
+    <h1>Pedido enviado<span class="sub">${c.id}</span></h1></div>
+  <div class="body"><div class="pad">
+    <div class="result" style="margin-bottom:18px">
+      <div class="rl">Ya está en el mostrador</div>
+      <div class="rt">Te cotizamos en menos de 4 horas hábiles</div>
+      <div class="rd">${c.veh.marca} ${c.veh.modelo} ${c.veh.anio} · ${c.veh.pat}</div>
+      <div class="rspec">💬&nbsp;Te escribimos al <b>${c.tel}</b></div>
+    </div>
+    <div style="font-weight:800;font-size:13px;margin-bottom:10px">Lo que pediste</div>
+    ${c.pedido.map(p=>`<div class="itemrow"><div class="ic">${rub(p.rubro).ic}</div>
+      <div class="in"><div class="it">${p.desc}</div>
+      <div class="is">${rub(p.rubro).n} · cantidad ${p.cant}${p.oem?' · N° '+p.oem:''}</div></div></div>`).join('')}
+    <div class="alert a-info" style="margin-top:16px"><span class="ai">🔍</span>
+      <div>Antes de pasarte precio verificamos la <b>aplicación exacta por patente</b>. Si el repuesto que pediste no
+      corresponde a tu versión, te avisamos y te decimos cuál va.</div></div>
+    <div style="margin-top:16px"><button class="btn btn-ghost" style="margin-bottom:10px"
+      onclick="S.role='fratello';S.fraCaso='${c.id}';S.fra='pedidos';S.fraDraft=null;render()">💡 Ver cómo lo cotiza el mostrador →</button>
+      <button class="btn btn-primary" onclick="S.rep=null;go('home')">Volver al inicio</button></div>
+    <div style="height:24px"></div>
+  </div></div>`;
+}
+
+/* ==========================================================
+   FLUJO 3 — AUXILIO 24 h
+   Pantalla corta a propósito: quien la abre está parado en la
+   calle. Tipo de emergencia, dónde estás, y sale el móvil.
+   ========================================================== */
+const EMERG = [
+  {id:'nose',    ic:'❓', t:'No sé qué tiene',   s:'Anda raro y no sé por qué',        eta:24, mov:'Móvil de diagnóstico', drv:'diagnóstico en el lugar'},
+  {id:'bateria', ic:'🔋', t:'No arranca',        s:'Batería, burro o corte eléctrico', eta:22, mov:'Móvil de arranque asistido', drv:'mecánico a domicilio'},
+  {id:'rueda',   ic:'⭕', t:'Pinché una rueda',  s:'Sin auxilio o sin poder cambiarla', eta:18, mov:'Móvil de asistencia de rueda', drv:'auxilio de rueda'},
+  {id:'temp',    ic:'🌡️', t:'Se recalentó',      s:'Subió la aguja o larga vapor',      eta:26, mov:'Grúa plancha', drv:'remolque al taller'},
+  {id:'parado',  ic:'⚙️', t:'Se rompió y no anda',s:'Quedé parado, no puedo mover el auto',eta:31,mov:'Grúa plancha', drv:'remolque al taller'},
+  {id:'choque',  ic:'🚨', t:'Choque o golpe',    s:'Necesito grúa y ayuda con el trámite',eta:28,mov:'Grúa plancha + asistencia', drv:'remolque y gestión'},
+  {id:'otro',    ic:'❓', t:'Otra cosa',         s:'Llaves adentro, combustible, etc.',  eta:24, mov:'Móvil polivalente', drv:'asistencia general'},
+];
+const MOVILES = [
+  {n:'Móvil 04', chofer:'Gustavo Ríos',   pat:'AC 512 TR', tel:'+54 351 400-0104'},
+  {n:'Móvil 07', chofer:'Damián Ocampo',  pat:'AD 118 MK', tel:'+54 351 400-0107'},
+  {n:'Móvil 11', chofer:'Rodrigo Cabrera',pat:'AB 903 LP', tel:'+54 351 400-0111'},
+];
+const ZONAS_DEMO = ['Av. Colón 1200 · Alberdi','Av. Juan B. Justo 3200 · Alta Córdoba',
+  'Ruta 9 Norte km 12 · Guiñazú','Av. Rafael Núñez 4500 · Cerro de las Rosas'];
+
+function irAuxilio(){
+  if(!S.aux) S.aux={tipo:null, ubic:'', gps:false, mueve:null, pat:S.user?S.user.pat:'', movil:null, eta:0, paso:0};
+  go('auxilio');
+}
+function auxOk(){ const A=S.aux; return !!(A && A.tipo && A.ubic.trim().length>4 && A.mueve); }
+function usarGPS(){
+  const A=S.aux;
+  A.gps=true; A.ubic=ZONAS_DEMO[Math.floor(Math.random()*ZONAS_DEMO.length)];
+  render(); toast('Ubicación tomada del GPS','📍');
+}
+function cAuxilio(){
+  const A=S.aux, ok=auxOk();
+  const e = A.tipo ? EMERG.find(x=>x.id===A.tipo) : null;
+  return `<div class="appbar"><button class="back" onclick="go('home')">←</button>
+    <h1>No sé qué tiene<span class="sub">Servicio SOS 24 h · móvil a domicilio</span></h1></div>
+  <div class="body">
+    <div class="sos-hero">
+      <div class="eyebrow"><span class="livedot"></span> 3 móviles disponibles ahora</div>
+      <h2>¿Qué le pasa al auto?</h2>
+      <p>No hace falta que sepas de mecánica. Elegí lo que notás, decinos dónde estás y te mandamos un móvil que lo revisa en el lugar.</p>
+    </div>
+
+    <div class="pad">
+      <div class="alert a-crit" style="margin-bottom:16px"><span class="ai">🚑</span>
+        <div><b>Si hay personas heridas, llamá primero al 911.</b> El auxilio mecánico va después de la emergencia médica.</div></div>
+
+      <div style="font-weight:800;font-size:13px;margin-bottom:11px">1 · Qué notás</div>
+      <div class="emgrid">${EMERG.map(x=>`<button class="em ${A.tipo===x.id?'on':''}" onclick="S.aux.tipo='${x.id}';render()">
+        <span class="ei">${x.ic}</span><div class="et">${x.t}</div><div class="es">${x.s}</div></button>`).join('')}</div>
+
+      ${e?`<div class="alert a-warn" style="margin-top:14px"><span class="ai">${e.ic}</span>
+        <div>Para esto mandamos <b>${e.mov.toLowerCase()}</b> — ${e.drv}. Tiempo estimado en Córdoba capital: <b>${e.eta} min</b>.
+        ${e.id==='nose'?'<br>El chofer es mecánico: revisa en el lugar y te dice qué tiene. Si no se resuelve ahí, lo lleva al taller de la red que corresponda.':''}</div></div>`:''}
+
+      <div class="hr"></div>
+      <div style="font-weight:800;font-size:13px;margin-bottom:11px">2 · Dónde estás</div>
+      <div class="field">
+        <input class="inp" value="${A.ubic}" oninput="S.aux.ubic=this.value;syncAux()"
+          placeholder="Calle y altura, o referencia (ruta y km)">
+        <div style="margin-top:9px"><button class="btn btn-ghost btn-sm" style="width:100%" onclick="usarGPS()">
+          📍 &nbsp;Usar mi ubicación actual</button></div>
+        ${A.gps?`<div class="muted" style="margin-top:7px;color:var(--ok);font-weight:650">✓ Tomada del GPS del teléfono</div>`:''}
+      </div>
+
+      <div class="field"><label>¿El vehículo se puede mover?</label>
+        <div class="radio-row">
+          ${[['si','Sí, anda','puede llegar solo'],['no','No, está parado','necesita grúa'],['nose','No sé','lo ve el chofer']]
+            .map(([k,t,s])=>`<button class="radio-b ${A.mueve===k?'on':''}" onclick="S.aux.mueve='${k}';render()">${t}<span class="rb-s">${s}</span></button>`).join('')}
+        </div></div>
+
+      <div class="field"><label>Patente <span class="opt">(para identificar el vehículo)</span></label>
+        <input class="inp mono" style="text-transform:uppercase;letter-spacing:.07em;font-weight:700" value="${A.pat}"
+          oninput="S.aux.pat=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" placeholder="AB123CD"></div>
+
+      <button id="cta" class="btn btn-sos" ${ok?'':'disabled'} onclick="pedirAuxilio()">🆘 &nbsp;Pedir auxilio ahora</button>
+      ${ok?'':'<div id="ctahint" class="muted" style="text-align:center;margin-top:10px">Elegí la situación, la ubicación y si el vehículo se mueve.</div>'}
+
+      <div class="alert a-info" style="margin-top:16px"><span class="ai">🔧</span>
+        <div>Si el auxilio no resuelve en el lugar, el móvil lo lleva a un <b>taller de la red</b> con la especialidad que corresponda,
+        y ahí sigue el circuito normal: diagnóstico, pedido de repuestos y cotización en el chat del caso.</div></div>
+
+      <div class="alert a-warn" style="margin-top:12px"><span class="ai">💰</span>
+        <div><b>Cómo se cobra.</b> Salida y primeros 15 km bonificados para clientes con cuenta; el excedente y la mano de obra
+        se informan antes de que el móvil salga. Nunca te cobramos algo que no aceptaste.</div></div>
+      <div style="height:24px"></div>
+    </div>
+  </div>`;
+}
+function syncAux(){
+  const b=$('#cta'); if(b) b.disabled=!auxOk();
+  const h=$('#ctahint'); if(h) h.style.display=auxOk()?'none':'block';
+}
+function pedirAuxilio(){
+  const A=S.aux, e=EMERG.find(x=>x.id===A.tipo);
+  A.movil = MOVILES[Math.floor(Math.random()*MOVILES.length)];
+  A.tipoDef = e;
+  A.eta = e.eta;
+  A.paso = 1;
+  A.id = 'AUX-0'+(700+Math.floor(Math.random()*90));
+  go('auxtrack');
+  toast('Auxilio despachado. '+A.movil.n+' en camino.','🚨');
+  correrETA();
+}
+let _aux;
+function correrETA(){
+  clearInterval(_aux);
+  _aux = setInterval(()=>{
+    const A=S.aux;
+    if(!A || S.cli!=='auxtrack'){ clearInterval(_aux); return; }
+    if(A.eta>0) A.eta--;
+    if(A.eta<=A.tipoDef.eta-4 && A.paso<2) A.paso=2;
+    if(A.eta<=6 && A.paso<3) A.paso=3;
+    if(A.eta<=0){ A.paso=4; clearInterval(_aux); render(); return; }
+    const n=$('#etaN'); if(n) n.textContent=A.eta; else render();
+  }, 1500);
+}
+function cAuxTrack(){
+  const A=S.aux, e=A.tipoDef, m=A.movil;
+  const pasos=[[1,'Pedido recibido','Tomamos tu ubicación y el tipo de emergencia'],
+               [2,'Móvil despachado',m.n+' salió hacia tu ubicación'],
+               [3,'Llegando','El chofer está a pocas cuadras'],
+               [4,'En el lugar','El chofer ya está con tu vehículo']];
+  return `<div class="appbar"><button class="back" onclick="go('home')">←</button>
+    <h1>${A.id}<span class="sub">Auxilio en curso · ${e.t}</span></h1></div>
+  <div class="body"><div class="pad">
+
+    <div class="mapbox" style="margin-bottom:16px">
+      <span class="tow" ${A.paso>=4?'style="animation:none;left:41%;top:48%"':''}>🚛</span>
+      <span class="pin">📍</span>
+      <span class="mlbl">📍 ${A.ubic}</span>
+    </div>
+
+    <div class="eta" style="margin-bottom:16px">
+      <div class="en"><span id="etaN">${A.eta}</span> min</div>
+      <div class="eu">${A.paso>=4?'El móvil ya está en el lugar':'Tiempo estimado de llegada'}</div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-h"><div><div class="card-t">🚛 ${m.n} · ${e.mov}</div>
+        <div class="card-s">${m.chofer} · dominio ${m.pat}</div></div>
+        <span class="badge ${A.paso>=4?'b-ok':'b-warn'}">${A.paso>=4?'En el lugar':'En camino'}</span></div>
+      <div style="display:flex;gap:9px;margin-top:13px">
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="toast('Llamando a ${m.chofer}','📞')">📞 Llamar al chofer</button>
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="toast('Abriría el chat con la central 24 h','💬')">💬 Central 24 h</button>
+      </div>
+    </div>
+
+    <div class="track" style="border-radius:14px;border:1px solid var(--line);margin-bottom:16px">
+      ${pasos.map(([n,t,d])=>{
+        const c = A.paso>n?'done':(A.paso===n?'now':'');
+        return `<div class="tr-i ${c}"><div class="td">${A.paso>n?'✓':''}</div>
+          <div><div class="tt">${t}</div>${A.paso===n?`<div class="ts">${d}</div>`:''}</div></div>`;
+      }).join('')}
+    </div>
+
+    <dl><div class="dl"><dt>Situación</dt><dd>${e.ic} ${e.t}</dd></div>
+    <div class="dl"><dt>Ubicación</dt><dd style="max-width:58%">${A.ubic}</dd></div>
+    <div class="dl"><dt>Vehículo</dt><dd class="mono">${A.pat||'sin patente'}</dd></div>
+    <div class="dl"><dt>¿Se mueve?</dt><dd>${A.mueve==='si'?'Sí':A.mueve==='no'?'No, está parado':'A confirmar'}</dd></div>
+    <div class="dl"><dt>Servicio</dt><dd>${e.drv}</dd></div></dl>
+
+    ${A.paso>=4?`<div class="alert a-ok" style="margin-top:16px"><span class="ai">✅</span>
+      <div><b>El móvil está con tu vehículo.</b> Si se resuelve en el lugar, cerramos acá. Si hay que remolcar,
+      te derivamos a un taller de la red y seguís el caso desde "Mis casos".</div></div>
+      <div style="margin-top:14px"><button class="btn btn-primary" onclick="derivarTaller()">🔧 Derivar a un taller de la red</button></div>`
+     :`<div class="alert a-warn" style="margin-top:16px"><span class="ai">🅿️</span>
+      <div><b>Mientras esperás:</b> quedate en un lugar seguro, balizas puestas y, si estás en ruta, salí del vehículo
+      y ubicate detrás del guardarraíl. Nunca abajo del auto.</div></div>`}
+    <div style="margin-top:14px"><button class="btn btn-ghost" onclick="cancelarAux()">Cancelar el auxilio</button></div>
+    <div style="height:24px"></div>
+  </div></div>`;
+}
+function cancelarAux(){ clearInterval(_aux); S.aux=null; go('home'); toast('Auxilio cancelado','✕'); }
+function derivarTaller(){
+  clearInterval(_aux);
+  const A=S.aux;
+  const mapa={nose:'general',bateria:'electrico',rueda:'tren_del',temp:'refrigeracion',parado:'motor',choque:'general',otro:'general'};
+  S.tri={cat:'nose', paso:0, resp:['Llegó por auxilio: '+A.tipoDef.t], votos:[], urg:A.tipo==='choque'?'critico':'importante',
+         hints:[A.tipoDef.drv], esp:mapa[A.tipo]||'general'};
+  S.aux=null; go('mecanicos');
+  toast('Te mostramos los talleres que hacen ese trabajo','🔧');
+}
+
+/* ================= MECÁNICO ================= */
+function vMecanico(){
+  const v={home:mHome,caso:mCaso,pedir:mPedir,chat:mChat,turno:mTurno}[S.mec]||mHome;
+  return '<div class="phone"><div class="phone-status"><span>9:41</span><span>Fratello · Taller</span><span>▮▮▮ 87%</span></div>'+v()+'</div>';
+}
+function mHome(){
+  const mios = S.casos.filter(c=>['t1','t3','t4'].includes(c.taller) || c.nuevo);
+  const porConf = mios.filter(c=>c.estado===0);
+  const hoy = mios.filter(c=>c.estado===1||c.estado===2);
+  const esper = mios.filter(c=>[3,4,5].includes(c.estado));
+  const rep = mios.filter(c=>c.estado>=6);
+  const card=(c,cta)=>{const e=ESPECIALIDADES[c.esp],u=URG[c.urg],cat=TRIAGE.find(k=>k.id===c.cat);
+    return `<div class="card card-tap" onclick="S.mecCaso='${c.id}';S.mec='caso';render()">
+    <div class="card-h"><div><div class="card-t">${c.veh.marca} ${c.veh.modelo} ${c.veh.anio}</div>
+      <div class="card-s">${c.veh.motor} · ${c.veh.km.toLocaleString('es-AR')} km · ${c.id}</div></div>
+      <span class="badge ${u.c}">${u.s}</span></div>
+    <div style="margin-top:9px;font-size:12.5px;color:var(--ink-2)">
+      <b>${cat?cat.ic+' '+cat.t:''}</b> — ${c.resp[0]}</div>
+    <div class="muted" style="margin-top:5px">Triage de la app: ${e.ic} ${e.n}</div>
+    ${c.turno?`<div class="muted" style="margin-top:4px;font-weight:650;color:${c.turno.ok?'var(--ok)':'var(--warn)'}">📅 ${c.turno.largo} · ${c.turno.h}${c.turno.ok?'':' · sin confirmar'}</div>`:''}
+    ${c.rechazo?`<div class="muted" style="margin-top:4px;color:var(--crit);font-weight:650">↩️ Pidió otra fecha: ${c.rechazo.motivo.toLowerCase()}</div>`:''}
+    ${cta?`<div style="margin-top:11px"><button class="btn btn-primary btn-sm" style="width:100%">${cta}</button></div>`
+        :`<div style="margin-top:9px"><span class="badge ${estadoDe(c).c}">${estadoDe(c).n}</span></div>`}
+  </div>`};
+  return `<div class="appbar"><div class="logo"><div class="mark">F</div>
+    <div class="name">Mi taller<small>Red Fratello</small></div></div></div>
+  <div class="body">
+    ${cuentaMec()}
+    ${porConf.length?`<div class="sect"><h3>🗓 Turnos que tenés que dar (${porConf.length})</h3>
+      <div class="muted" style="margin:-4px 0 11px">Fratello te derivó el caso, pero el día y la hora los ponés vos. Mirá tu agenda y confirmá.</div>
+      ${porConf.map(c=>card(c, c.rechazo?'Proponer otra fecha':'Dar turno')).join('')}</div>`:''}
+    <div class="sect"><h3>📅 Turnos confirmados (${hoy.length})</h3>
+      ${hoy.length?hoy.map(c=>card(c, c.estado===1?(c.turno&&c.turno.ok?'Recibir el vehículo':null):'Pedir repuestos a Fratello')).join('')
+        :`<div class="muted" style="text-align:center;padding:16px">Sin turnos pendientes.</div>`}</div>
+    ${esper.length?`<div class="sect"><h3>⏳ Esperando a Fratello / al cliente (${esper.length})</h3>${esper.map(c=>card(c,null)).join('')}</div>`:''}
+    ${rep.length?`<div class="sect"><h3>✅ En reparación o listos (${rep.length})</h3>${rep.map(c=>card(c,null)).join('')}</div>`:''}
+    <div class="sect"><div class="alert a-info"><span class="ai">💡</span>
+      <div><b>No ves precios acá, y es a propósito.</b> Vos pedís lo que el vehículo necesita. El precio lo arma Fratello y lo negocia con el cliente. Así el diagnóstico no se contamina con el margen.</div></div></div>
+    <div style="height:20px"></div>
+  </div>`;
+}
+function cuentaMec(){
+  const t=tal('t1'), k=stats(t), pos=ranking().findIndex(x=>x.id==='t1')+1;
+  const faltan = Math.max(0, Math.ceil(.60*k.base) - t.st.pedidos);
+  return `<div class="sect" style="border-top:none;padding-bottom:6px">
+    <h3>Estado de tu cuenta</h3>
+    <div class="card" style="border-color:${k.estado==='Activa'?'#C8E5D8':k.estado==='En observación'?'#F2E0C0':'#F3D0CC'};
+      background:${k.estado==='Activa'?'var(--ok-soft)':k.estado==='En observación'?'var(--warn-soft)':'var(--crit-soft)'}">
+      <div class="card-h"><div><div class="card-t">Cuenta ${k.estado.toLowerCase()}</div>
+        <div class="card-s">Puesto #${pos} de ${TALLERES.length} en la red</div></div>
+        <span class="badge ${k.cls}">${pct(k.tasaPedido)}</span></div>
+      <div class="muted" style="margin-top:9px;color:var(--ink-2)">
+        ${k.estado==='Activa'
+          ? 'Estás pidiendo repuestos en la proporción esperada. Seguís recibiendo casos con prioridad.'
+          : k.estado==='En observación'
+          ? 'Estás por debajo del 60% esperado. Te faltan '+faltan+' pedidos para volver a Activa.'
+          : 'Muy por debajo del mínimo. Dejás de recibir casos nuevos hasta regularizar.'}
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:11px">
+      ${[[t.st.casos,'Casos recibidos'],[t.st.pedidos,'Pedidos que hiciste'],[t.st.comprados,'Compras cerradas']]
+        .map(([v,l])=>`<div class="card" style="padding:11px 10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;letter-spacing:-.03em">${v}</div>
+          <div class="muted" style="font-size:10.5px;line-height:1.3;margin-top:2px">${l}</div></div>`).join('')}
+    </div>
+    <div class="card" style="margin-top:9px;display:flex;justify-content:space-between;align-items:center;padding:12px 14px">
+      <div><div class="muted" style="font-weight:650">Comisión acumulada del mes</div>
+        <div class="muted" style="font-size:11px">8% sobre repuestos vendidos por tus diagnósticos</div></div>
+      <div style="font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--ok)">$ 284.500</div></div>
+    <div class="muted" style="margin-top:9px">
+      Declaraste <b>${t.st.sinRep}</b> trabajos que no llevaban repuesto. Esos no cuentan en contra tuyo.
+      <button style="text-decoration:underline;font-weight:650;margin-left:3px" onclick="declararSinRep()">Declarar otro</button>
+    </div>
+  </div>`;
+}
+function declararSinRep(){
+  const t=tal('t1'); t.st.sinRep++; render();
+  toast('Trabajo sin repuesto declarado. Queda registrado.','📝');
+}
+function mCaso(){
+  const c=caso(S.mecCaso), e=ESPECIALIDADES[c.esp], u=URG[c.urg], cat=TRIAGE.find(k=>k.id===c.cat);
+  return `<div class="appbar"><button class="back" onclick="S.mec='home';render()">←</button>
+    <h1>${c.id}<span class="sub">${c.veh.marca} ${c.veh.modelo} ${c.veh.anio}</span></h1></div>
+  <div class="body"><div class="pad">
+    <div class="card" style="background:var(--surface-2)">
+      <dl><div class="dl"><dt>Motor</dt><dd>${c.veh.motor}</dd></div>
+      <div class="dl"><dt>Kilometraje</dt><dd class="mono">${c.veh.km.toLocaleString('es-AR')} km</dd></div>
+      <div class="dl"><dt>Patente</dt><dd>${c.veh.pat}</dd></div>
+      <div class="dl"><dt>Cliente</dt><dd>${c.cliente}</dd></div></dl></div>
+
+    <div class="hr"></div>
+    <div style="font-weight:800;font-size:14px;margin-bottom:9px">📋 Triage que hizo el cliente en la app</div>
+    <div class="card">
+      <div style="font-weight:700;font-size:14px">${cat?cat.ic+' '+cat.t:''}</div>
+      ${c.resp.map(r=>`<div class="muted" style="margin-top:5px">· ${r}</div>`).join('')}
+      <div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap">
+        <span class="badge b-match">${e.ic} ${e.n}</span><span class="badge ${u.c}">${u.s} ${u.n}</span></div>
+    </div>
+    <div class="muted" style="margin-top:9px">Esto es lo que dijo el cliente, no un diagnóstico. Confirmalo o corregilo con el vehículo delante.</div>
+
+    ${c.diag?`<div class="hr"></div><div class="field"><label>Tu diagnóstico</label>
+      <div style="font-size:13.5px;line-height:1.55;color:var(--ink-2)">${c.diag}</div></div>
+      <div class="field"><label>Repuestos pedidos a Fratello</label>
+      ${c.pedido.map(p=>`<div class="itemrow"><div class="ic">${rub(p.rubro).ic}</div>
+        <div class="in"><div class="it">${p.desc}</div><div class="is">${rub(p.rubro).n} · x${p.cant}${p.ecoOk?' · económica habilitada':''}</div></div></div>`).join('')}</div>
+      ${c.criterio?`<div class="field"><label>Criterio que marcaste ${c.estado<5?'<span class="opt">(lo podés cambiar)</span>':''}</label>
+        ${c.estado<5?`<div class="radio-row">
+          ${Object.entries(CRITERIO).map(([k,x])=>`<button class="radio-b ${c.criterio===k?'on':''}"
+            onclick="cambiarCriterio('${c.id}','${k}')">${x.s} ${x.n}<span class="rb-s">${x.tag}</span></button>`).join('')}
+        </div>
+        <div class="muted" style="margin-top:8px">Si el cliente te dice otra cosa mientras esperás el presupuesto, cambialo acá: el mostrador y él se enteran en el chat.</div>`
+        :`<span class="badge ${CRITERIO[c.criterio].c}">${CRITERIO[c.criterio].s} ${CRITERIO[c.criterio].n}</span>`}</div>`:''}
+      <div class="alert a-info"><span class="ai">⏳</span><div>Estado: <b>${estadoDe(c).n}</b>. ${estadoDe(c).d}.</div></div>
+    `:`<div style="margin-top:20px">
+      ${c.estado===0?`<button class="btn btn-primary" onclick="abrirTurno('${c.id}')">🗓 ${c.rechazo?'Proponer otra fecha':'Darle turno al cliente'}</button>`
+        :c.estado===1&&c.turno&&!c.turno.ok?`<button class="btn btn-ghost" disabled>⏳ Esperando que el cliente confirme</button>`
+        :c.estado===1?`<button class="btn btn-primary" onclick="recibir('${c.id}')">Recibí el vehículo</button>`
+        :`<button class="btn btn-primary" onclick="abrirPedido('${c.id}')">🔩 Pedir repuestos a Fratello</button>`}
+    </div>`}
+
+    ${c.turno?`<div class="hr"></div>
+      <div class="field" style="margin-bottom:0"><label>Turno que le diste</label>
+        <div class="card" style="background:${c.turno.ok?'var(--ok-soft)':'var(--warn-soft)'};border-color:${c.turno.ok?'#C8E5D8':'#F2E0C0'}">
+          <div style="font-weight:800;font-size:14px">📅 ${c.turno.largo} · ${c.turno.h}</div>
+          <div class="muted" style="margin-top:3px;font-weight:700;color:${c.turno.ok?'var(--ok)':'var(--warn)'}">
+            ${c.turno.ok?'✓ El cliente lo confirmó':'⏳ Esperando que el cliente lo confirme'}</div>
+          ${c.turno.nota?`<div class="muted" style="margin-top:5px;color:var(--ink-2)">Le dijiste: ${c.turno.nota}</div>`:''}
+          ${c.estado===1?`<div style="margin-top:9px"><button style="text-decoration:underline;font-weight:700;font-size:12.5px"
+            onclick="abrirTurno('${c.id}')">Reprogramar →</button></div>`:''}</div></div>`:''}
+
+    <div style="margin-top:14px"><button class="btn btn-ghost" onclick="S.chatCaso='${c.id}';S.chatDraft='';S.mec='chat';render()">
+      💬 &nbsp;Chat con el mostrador</button>
+      <div class="muted" style="text-align:center;margin-top:8px">Hilo interno del taller. El cliente no lo ve.</div></div>
+    <div style="height:20px"></div>
+  </div></div>`;
+}
+
+/* ---- CHAT DEL TALLER CON EL MOSTRADOR (sin precios) ---- */
+function mChat(){
+  const c=caso(S.chatCaso); if(!c) return mHome();
+  return `<div class="appbar"><button class="back" onclick="S.mecCaso='${c.id}';S.mec='caso';render()">←</button>
+    <h1>${c.id}<span class="sub">${c.veh.marca} ${c.veh.modelo} · hilo interno</span></h1></div>
+  ${chatHeader('Hilo del taller')}
+  <div class="chat-wrap">
+    <div class="chat-scroll">
+      <div class="b-sys"><span>🔒 Este hilo es entre el taller y el mostrador. El cliente no lo ve y acá no se manejan precios.</span></div>
+      ${burbujas(c,'mec','mecanico')}
+    </div>
+    ${chatInput(c.id,'mec','mecanico')}
+  </div>`;
+}
+/* ---- EL MECÁNICO DA EL TURNO ----
+   Fratello deriva; la agenda es del taller. Por eso el estado 0 existe:
+   el caso está creado pero todavía no tiene día ni hora.              */
+function abrirTurno(id){
+  const c=caso(id), ds=diasTurno();
+  S.mecCaso=id;
+  S.turnoDraft = c.turno
+    ? {dia:(ds.find(d=>d.k===c.turno.k)||ds[0]).k, hora:c.turno.h, nota:c.turno.nota||'', re:true}
+    : {dia:ds[0].k, hora:'', nota:'', re:false};
+  S.mec='turno'; render();
+}
+function mTurno(){
+  const c=caso(S.mecCaso), d=S.turnoDraft, ds=diasTurno();
+  const dia = ds.find(x=>x.k===d.dia) || ds[0];
+  const u=URG[c.urg], cat=TRIAGE.find(k=>k.id===c.cat), ok=validNow();
+  const libres = horasDe(dia).filter(h=>!ocupado(dia.k,h)).length;
+  return `<div class="appbar"><button class="back" onclick="S.mec='${d.re?'caso':'home'}';render()">←</button>
+    <h1>${d.re?'Reprogramar turno':'Dar turno'}<span class="sub">${c.id} · ${c.veh.marca} ${c.veh.modelo}</span></h1></div>
+  <div class="body"><div class="pad">
+    <div class="card" style="background:var(--surface-2);margin-bottom:14px">
+      <div style="font-weight:700;font-size:13.5px">${c.veh.marca} ${c.veh.modelo} ${c.veh.anio} · ${c.veh.motor}</div>
+      <div class="muted mono" style="margin-top:2px">${c.veh.km.toLocaleString('es-AR')} km · ${c.veh.pat} · ${c.cliente}</div>
+      <div style="margin-top:9px;font-size:12.5px;color:var(--ink-2)"><b>${cat?cat.ic+' '+cat.t:''}</b> — ${c.resp.join(' · ')}</div>
+      <div style="margin-top:8px"><span class="badge ${u.c}">${u.s} ${u.n}</span></div></div>
+
+    ${c.rechazo?`<div class="alert a-warn" style="margin-bottom:14px"><span class="ai">↩️</span><div>
+      <b>El cliente no pudo con la fecha anterior${c.rechazo.previo?' ('+c.rechazo.previo+')':''}.</b>
+      Motivo: ${c.rechazo.motivo}.${c.rechazo.txt?' Te dejó dicho: “'+c.rechazo.txt+'”.':''}</div></div>`:''}
+
+    ${c.urg==='critico'?`<div class="alert a-crit" style="margin-bottom:14px"><span class="ai">🔴</span>
+      <div><b>El triage salió crítico.</b> El cliente no debería circular con el vehículo: si podés, dale el primer hueco que tengas o avisale que lo traiga en grúa.</div></div>`
+    :`<div class="alert a-info" style="margin-bottom:14px"><span class="ai">📅</span>
+      <div>Elegí sobre tu agenda. El cliente ve el día y la hora en el chat apenas confirmes, y Fratello queda notificado.</div></div>`}
+
+    <div class="field"><label>Día</label>
+      <div class="dayrow">${ds.map(x=>`<button class="daychip ${d.dia===x.k?'on':''}"
+        onclick="S.turnoDraft.dia='${x.k}';S.turnoDraft.hora='';render()">${x.n} ${x.f}<span class="dc-s">${x.sab?'medio día':'jornada'}</span></button>`).join('')}</div></div>
+
+    <div class="field"><label>Hora <span class="opt">(${libres} libres el ${dia.largo})</span></label>
+      <div class="hgrid">${horasDe(dia).map(h=>{const oc=ocupado(dia.k,h);
+        return `<button class="hbtn ${d.hora===h?'on':''}" ${oc?'disabled':''}
+          onclick="S.turnoDraft.hora='${h}';render()">${h}</button>`;}).join('')}</div>
+      <div class="muted" style="margin-top:8px">${libres<horasDe(dia).length?'Las tachadas ya las tenés ocupadas. ':''}${dia.sab?'Los sábados trabajás solo a la mañana.':''}</div></div>
+
+    <div class="field"><label>Indicaciones para el cliente <span class="opt">(opc.)</span></label>
+      <textarea class="inp" style="min-height:64px" oninput="S.turnoDraft.nota=this.value;sync()"
+        placeholder="Traelo con menos de medio tanque. Dejámelo a la mañana y lo tenés a la tarde.">${d.nota}</textarea></div>
+
+    <button id="cta" class="btn btn-primary" ${ok?'':'disabled'} onclick="confirmarTurno()">
+      ${d.re?'Reprogramar y avisar':'Confirmar el turno'}</button>
+    ${ok?'':'<div id="ctahint" class="muted" style="text-align:center;margin-top:10px">Elegí día y hora.</div>'}
+    <div class="muted" style="text-align:center;margin-top:10px">Fratello no te asigna turnos: solo te deriva el caso. La agenda la manejás vos.</div>
+    <div style="height:24px"></div>
+  </div></div>`;
+}
+function confirmarTurno(){
+  const c=caso(S.mecCaso), d=S.turnoDraft;
+  const dia = diasTurno().find(x=>x.k===d.dia);
+  const re = !!c.turno;
+  c.turno={k:dia.k, largo:dia.largo, h:d.hora, nota:d.nota.trim(), ok:false};
+  c.estado=Math.max(c.estado,1); c.rechazo=null;
+  const t=tal(c.taller), mec=t?t.mec.split(' ')[0]:'El taller';
+  decir(c,'mec',M('mecanico',(re?'Reprogramé':'Le doy')+' el turno para el '+dia.largo+' a las '+d.hora+'.'
+    +(d.nota.trim()?' Le avisé: '+d.nota.trim():''),horaAhora()));
+  decir(c,'cli',SYS((re?'Nueva fecha propuesta':'Turno propuesto')+' · '+dia.largo+' '+d.hora));
+  decir(c,'cli',M('fratello',mec+' te '+(re?'propone otra fecha':'propone turno')+' para el '+dia.largo+' a las '+d.hora+'.'
+    +(d.nota.trim()?' Te deja una indicación: '+d.nota.trim():'')
+    +' Confirmalo desde el caso; si no te sirve, pedí otra fecha y él busca otro hueco.',horaAhora()));
+  S.mec='home'; S.turnoDraft=null; render();
+  toast(re?'Nueva fecha enviada al cliente.':'Turno propuesto. Espera que el cliente confirme.','📅');
+}
+
+/* El cliente puede cambiar de idea mientras espera el presupuesto.
+   Se avisa en los dos hilos para que nadie quede desincronizado. */
+function cambiarCriterio(id,k){
+  const c=caso(id); if(c.criterio===k) return;
+  c.criterio=k; const cr=CRITERIO[k];
+  decir(c,'mec',M('mecanico','Cambio de criterio: ahora el cliente pide '+cr.n.toLowerCase()+' ('+cr.tag.toLowerCase()+').',horaAhora()));
+  decir(c,'cli',M('fratello','El taller me avisó que cambiaste el criterio: ahora vamos por '+cr.n.toLowerCase()+'. Ajusto las opciones con eso.',horaAhora()));
+  if(c.estado===4){
+    c.estado=3; c.cotEnviada=null; c.pedido.forEach(p=>p.ops=[]);
+    c.chat.cli = c.chat.cli.filter(x=>x.tipo!=='cot');   // la anterior deja de valer
+    S.fraDraft=null;
+    decir(c,'cli',SYS('La cotización anterior queda sin efecto · se rehace con el nuevo criterio'));
+  }
+  render(); toast('Criterio actualizado. Avisamos al mostrador.','🔄');
+}
+function recibir(id){
+  const c=caso(id); c.estado=2;
+  decir(c,'cli',SYS('El taller recibió el vehículo · '+horaAhora()));
+  render(); toast('Vehículo recibido. Avisamos al cliente.','🔧');
+}
+let IT=0;
+const nuevoItem=()=>({id:'n'+(++IT),rubro:'',desc:'',oem:'',cant:1,ecoOk:false});
+function abrirPedido(id){
+  S.mecCaso=id; S.mecDraft={diag:'',items:[nuevoItem()],nota:'',urgencia:'normal',criterio:'equilibrada'};
+  S.mec='pedir'; render();
+}
+const CRIT = d => CRITERIO[d.criterio] || CRITERIO.equilibrada;
+/* Ítems de seguridad crítica sin económica habilitada, solo importa
+   cuando el criterio del cliente es "lo más barato" */
+function critSinEco(d){
+  if(d.criterio!=='economica') return 0;
+  return d.items.filter(i=>i.rubro && rub(i.rubro).crit && !i.ecoOk).length;
+}
+/* Habilita económica en todos los ítems de seguridad crítica de una */
+function habilitarEcoTodo(){
+  S.mecDraft.items.forEach(i=>{ if(i.rubro&&rub(i.rubro).crit) i.ecoOk=true; });
+  render(); toast('Línea económica habilitada en los ítems de seguridad','🛡');
+}
+function mPedir(){
+  const c=caso(S.mecCaso), d=S.mecDraft, ok=validNow();
+  return `<div class="appbar"><button class="back" onclick="S.mec='caso';render()">←</button>
+    <h1>Pedido a Fratello<span class="sub">${c.id} · ${c.veh.marca} ${c.veh.modelo}</span></h1></div>
+  <div class="body"><div class="pad">
+    <div class="card" style="background:var(--surface-2);margin-bottom:16px">
+      <div style="font-weight:700;font-size:13.5px">${c.veh.marca} ${c.veh.modelo} ${c.veh.anio} · ${c.veh.motor}</div>
+      <div class="muted mono" style="margin-top:2px">${c.veh.km.toLocaleString('es-AR')} km · ${c.veh.pat}</div></div>
+
+    <div class="field"><label>Tu diagnóstico *</label>
+      <textarea class="inp" oninput="S.mecDraft.diag=this.value;sync()" placeholder="Qué encontraste, qué medición hiciste, qué descartaste. Esto lo lee el cliente.">${d.diag}</textarea></div>
+
+    <div class="field"><label>¿Para cuándo lo necesitás?</label>
+      <div class="radio-row">
+        ${[['urgente','Urgente','hoy'],['normal','Normal','48 h'],['programado','Programado','esta semana']]
+          .map(([k,t,s])=>`<button class="radio-b ${d.urgencia===k?'on':''}" onclick="S.mecDraft.urgencia='${k}';render()">${t}<span class="rb-s">${s}</span></button>`).join('')}
+      </div></div>
+
+    <div class="field"><label>¿Qué te pidió el cliente? *</label>
+      <div class="muted" style="margin:-4px 0 9px">Vos sos el que habla con él cuando deja el vehículo. Esto define qué línea le recomienda el mostrador, no qué le puede ofrecer.</div>
+      <div class="radio-row">
+        ${Object.entries(CRITERIO).map(([k,x])=>`<button class="radio-b ${d.criterio===k?'on':''}"
+          onclick="S.mecDraft.criterio='${k}';render()">${x.s} ${x.n}<span class="rb-s">${x.tag}</span></button>`).join('')}
+      </div>
+      <div class="alert a-info" style="margin-top:10px"><span class="ai">${CRIT(d).s}</span>
+        <div>${CRIT(d).mec}</div></div>
+      ${critSinEco(d)?`<div class="alert a-warn" style="margin-top:9px"><span class="ai">🛡</span><div>
+        Marcaste <b>${CRIT(d).n}</b>, pero hay ${critSinEco(d)} ítem${critSinEco(d)>1?'s':''} de seguridad crítica sin habilitar línea económica.
+        Mientras no la habilites, ahí el mostrador solo va a poder ofrecer primera y alternativa.
+        <br><button style="text-decoration:underline;font-weight:750;margin-top:6px" onclick="habilitarEcoTodo()">Habilitarla en esos ítems →</button></div></div>`:''}
+      ${d.criterio==='primera'&&d.items.some(i=>i.ecoOk)?`<div class="alert a-warn" style="margin-top:9px"><span class="ai">⚠️</span><div>
+        Marcaste <b>Que dure</b> pero dejaste habilitada la línea económica en un ítem de seguridad. Es contradictorio: revisalo antes de enviar.</div></div>`:''}
+    </div>
+
+    <div class="hr"></div>
+    <div style="font-weight:800;font-size:15px;margin-bottom:3px">🔩 Qué necesito</div>
+    <div class="muted" style="margin-bottom:13px">Pedilo como se lo pedirías al mostrador. No hace falta el código: Fratello lo busca.</div>
+
+    ${d.items.map((it,ix)=>{
+      const r=it.rubro?rub(it.rubro):null;
+      return `<div class="card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:11px">
+          <div style="font-weight:750;font-size:13px;color:var(--ink-3)">Ítem ${ix+1}</div>
+          ${d.items.length>1?`<button style="color:var(--crit);font-size:12px;font-weight:650" onclick="S.mecDraft.items.splice(${ix},1);render()">Quitar</button>`:''}
+        </div>
+        <div class="field"><label>Rubro *</label><select class="inp" onchange="S.mecDraft.items[${ix}].rubro=this.value;render()">
+          <option value="">Elegir…</option>${RUBROS.map(x=>`<option value="${x.id}" ${it.rubro===x.id?'selected':''}>${x.ic} ${x.n}${x.crit?' 🛡':''}</option>`).join('')}</select></div>
+        <div class="field"><label>Qué necesito *</label>
+          <input class="inp" value="${it.desc}" oninput="S.mecDraft.items[${ix}].desc=this.value;sync()" placeholder="Pinza de freno delantera derecha"></div>
+        <div class="grid2">
+          <div class="field"><label>N° original <span class="opt">(opc.)</span></label>
+            <input class="inp" value="${it.oem}" oninput="S.mecDraft.items[${ix}].oem=this.value;sync()" placeholder="47730-0K090"></div>
+          <div class="field" style="margin-bottom:0"><label>Cantidad</label>
+            <input class="inp" type="number" min="1" value="${it.cant}" oninput="S.mecDraft.items[${ix}].cant=+this.value;sync()"></div>
+        </div>
+        ${r&&r.crit?`<div class="alert a-warn" style="margin-top:12px"><span class="ai">🛡</span><div>
+          <b>${r.n} es rubro de seguridad crítica.</b> Fratello no le va a ofrecer línea económica al cliente salvo que vos la habilites.
+          <label class="checkline" style="margin-top:9px"><input type="checkbox" ${it.ecoOk?'checked':''}
+            onchange="S.mecDraft.items[${ix}].ecoOk=this.checked;render()">
+            <span>Habilito línea económica en este ítem</span></label></div></div>`:''}
+      </div>`;
+    }).join('')}
+    <button class="btn btn-ghost" onclick="S.mecDraft.items.push(nuevoItem());render()">+ Agregar otro</button>
+
+    <div class="field" style="margin-top:20px"><label>Nota para el mostrador <span class="opt">(no la ve el cliente)</span></label>
+      <textarea class="inp" style="min-height:64px" oninput="S.mecDraft.nota=this.value;sync()" placeholder="El cliente hace mucha ruta con carga, conviene primera línea.">${d.nota}</textarea></div>
+
+    <button id="cta" class="btn btn-primary" ${ok?'':'disabled'} onclick="enviarPedido()">Enviar pedido a Fratello</button>
+    ${ok?'':'<div id="ctahint" class="muted" style="text-align:center;margin-top:10px">Cargá el diagnóstico y al menos un ítem con rubro.</div>'}
+    <div class="muted" style="text-align:center;margin-top:10px">Fratello le publica las opciones al cliente en el chat del caso. Vos seguís la conversación por el hilo del taller.</div>
+    <div style="height:24px"></div>
+  </div></div>`;
+}
+function enviarPedido(){
+  const c=caso(S.mecCaso), d=S.mecDraft, cr=CRIT(d);
+  c.diag=d.diag; c.nota=d.nota; c.urgPedido=d.urgencia; c.criterio=d.criterio;
+  c.pedido=d.items.filter(i=>i.rubro&&i.desc).map(i=>({...i,ops:[]}));
+  c.estado=3; c.pedidoEn='recién';
+  decir(c,'mec',M('mecanico', d.diag + (d.nota?'\n\nNota: '+d.nota:''), horaAhora()));
+  decir(c,'mec',M('mecanico','Criterio del cliente: '+cr.s+' '+cr.n+' ('+cr.tag.toLowerCase()+').',horaAhora()));
+  decir(c,'cli',SYS('El taller pidió los repuestos · '+horaAhora()));
+  decir(c,'cli',M('fratello','Ya tengo lo que pidió el taller. Me pasaron tu criterio: '+cr.cli
+    +'. Armo las opciones con eso en mente y en un rato te las paso por acá. Si cambiaste de idea, decímelo ahora.',horaAhora()));
+  S.mec='home'; S.mecDraft=null; render();
+  toast('Pedido enviado al mostrador de Fratello.','📤');
+}
+
+/* ================= PANEL FRATELLO ================= */
+function vFratello(){
+  const pend=S.casos.filter(c=>c.estado===3).length;
+  const enRev=TALLERES.filter(t=>stats(t).estado!=='Activa').length;
+  const nav=[['pedidos','📥','Pedidos',pend],['casos','📋','Casos',S.casos.length],
+             ['ranking','🏆','Ranking',TALLERES.length],['clientes','👤','Clientes',CLIENTES.length],
+             ['marcas','🏷','Marcas',MARCAS.length]];
+  const v={pedidos:fPedidos,casos:fCasos,ranking:fRanking,clientes:fClientes,marcas:fMarcas}[S.fra]||fPedidos;
+  return `<div class="desk"><div class="panel">
+    <aside class="side">
+      <div class="logo"><div class="mark">F</div><div class="name">Fratello<small>Mostrador</small></div></div>
+      <nav>${nav.map(([k,i,n,c])=>`<button class="${S.fra===k?'on':''}" onclick="S.fra='${k}';S.fraCaso=null;render()">
+        <span>${i}</span>${n}<span class="count">${c}</span></button>`).join('')}</nav>
+      <div class="who"><b>Sofía G.</b>Mostrador · turno mañana</div>
+    </aside>
+    <main class="main">${v()}</main>
+  </div></div>`;
+}
+function fPedidos(){
+  if(S.fraCaso) return fArmar();
+  const pend=S.casos.filter(c=>c.estado===3);
+  const enviados=S.casos.filter(c=>c.estado>=4);
+  return `<h2>Pedidos de los mecánicos</h2>
+  <div class="lead">Lo que los talleres de la red nos están pidiendo ahora. Cada pedido ya viene con el vehículo identificado y el diagnóstico hecho.</div>
+  <div class="kpis">
+    <div class="kpi"><div class="kv" style="color:var(--brand)">${pend.length}</div><div class="kl">Pedidos sin responder</div></div>
+    <div class="kpi"><div class="kv">${enviados.length}</div><div class="kl">Cotizaciones enviadas</div></div>
+    <div class="kpi"><div class="kv">${S.casos.filter(c=>c.estado>=5).length}</div><div class="kl">Cerrados</div></div>
+    <div class="kpi"><div class="kv">${TALLERES.length}</div><div class="kl">Talleres activos</div></div>
+  </div>
+  ${pend.length?`<div class="alert a-warn" style="margin-bottom:16px"><span class="ai">🔔</span>
+    <div><b>${pend.length} pedido${pend.length>1?'s':''} esperando.</b> El compromiso es publicar la cotización en el chat del cliente en menos de 4 horas hábiles.</div></div>`:''}
+  <table><thead><tr><th>Caso</th><th>Vehículo</th><th>Cliente</th><th>Taller</th><th>Ítems</th><th>Criterio</th><th>Urgencia</th><th></th></tr></thead><tbody>
+  ${pend.concat(enviados).map(c=>{const t=tal(c.taller);return `<tr onclick="S.fraCaso='${c.id}';S.fraDraft=null;render()">
+    <td class="mono" style="font-weight:700">${c.id}</td>
+    <td><b>${c.veh.marca} ${c.veh.modelo}</b> <span style="color:var(--ink-3)">${c.veh.anio}</span></td>
+    <td>${c.cliente}</td><td>${t?t.n:'<span class="badge b-info">🔩 Pedido directo</span>'}</td><td class="mono">${c.pedido.length}</td>
+    <td>${c.criterio?`<span class="badge ${CRITERIO[c.criterio].c}">${CRITERIO[c.criterio].s} ${CRITERIO[c.criterio].n}</span>`:'<span style="color:var(--ink-3)">—</span>'}</td>
+    <td>${URG[c.urg].s}</td>
+    <td style="text-align:right">${c.estado===3?'<b style="color:var(--brand)">Armar opciones →</b>':'Ver →'}</td></tr>`}).join('')}
+  </tbody></table>`;
+}
+
+function mensajeCot(c, ops, manoObra){
+  const t=tal(c.taller);
+  const nom = c.cliente.split(' ')[0];
+  let m = `Hola ${nom}, te paso las opciones 🔧\n\n`;
+  if(c.directo){
+    m += `Recibimos tu pedido para el ${c.veh.marca} ${c.veh.modelo} ${c.veh.anio||''} (${c.veh.pat}). Verificamos la aplicación por patente y esto es lo que tenemos.\n\n`;
+  } else {
+    m += `${t?t.mec+' de '+t.n:'El taller'} ya revisó tu ${c.veh.marca} ${c.veh.modelo} (${c.veh.pat}) y nos pasó lo que necesita.\n\n`;
+    m += `*Qué encontró:*\n${c.diag||'—'}\n\n`;
+    if(c.criterio){
+      const cr=CRITERIO[c.criterio];
+      m += `*Lo que pediste:* ${cr.cli}. Te marco con ⭐ la opción que va con eso.\n\n`;
+    }
+  }
+  m += `*Opciones que tenemos:*\n`;
+  let huboRec=false;
+  c.pedido.forEach((it,ix)=>{
+    m += `\n${ix+1}) ${it.desc}${it.cant>1?' (x'+it.cant+')':''}\n`;
+    const o = ops ? ops[ix] : null;
+    const lineas = o ? ['primera','alternativa','economica'].filter(l=>o[l]&&o[l].p&&+o[l].pr>0) : [];
+    const rec = (c.criterio&&!c.directo) ? lineaRec(c.criterio, lineas) : null;
+    if(lineas.length){
+      lineas.forEach(l=>{
+        const x=o[l];
+        const nl = l==='primera'?'Primera línea':l==='alternativa'?'Alternativa':'Económica';
+        const disp = x.d==='stock'?'en stock':x.d==='48h'?'llega en 48 h':'llega en 7 días';
+        if(l===rec) huboRec=true;
+        m += `   ${l===rec?'⭐':'•'} ${nl} — ${x.p} — $ ${Number(x.pr).toLocaleString('es-AR')} (${disp})\n`;
+      });
+    } else { m += `   • (sin cotizar)\n`; }
+  });
+  if(manoObra) m += `\n*Mano de obra del taller:* $ ${Number(manoObra).toLocaleString('es-AR')}\n`;
+  if(huboRec) m += `\nLa ⭐ es la recomendada según lo que pediste, no la que más nos conviene a nosotros. Podés elegir cualquiera de las otras.\n`;
+  m += `\nDecime cuál preferís y te lo reservo. El pago lo coordinamos por acá y el repuesto va directo al taller 🚚\n\n`;
+  m += `Los precios valen 72 h.`;
+  return m;
+}
+/* Texto de la cotización tal como quedó guardada en el caso */
+function cotGuardada(c){
+  return mensajeCot(c, c.pedido.map(p=>{
+    const o={}; (p.ops||[]).forEach(x=>o[x.l]={p:x.p,pr:x.pr,d:x.d}); return o;
+  }), c.manoObra);
+}
+
+/* ==========================================================
+   CHAT — render compartido por cliente, taller y mostrador
+   ========================================================== */
+const QUIEN = {cliente:'Cliente', fratello:'Fratello · mostrador', mecanico:'Taller'};
+
+function burbuja(c, x, yo){
+  if(x.de==='sys') return `<div class="b-sys"><span>${esc(x.txt)}</span></div>`;
+  if(x.tipo==='cot') return `<div class="cotcard">
+    <div class="cch">📋 Cotización · ${c.id}</div>
+    <div class="ccb">${esc(cotGuardada(c))}<span class="bt" style="opacity:.5">${x.hora}</span></div></div>`;
+  const mio = x.de===yo;
+  const cls = mio?'b-me':(x.de==='mecanico'?'b-mec':'b-them');
+  /* Ojo: la burbuja usa white-space:pre-wrap, así que el template
+     no puede tener saltos de línea ni indentación propios. */
+  const head = mio?'':`<span class="bh">${QUIEN[x.de]}</span>`;
+  const foto = x.foto?`<div class="foto"><span class="fi">🖼</span>${x.foto}</div>`:'';
+  return `<div class="bub ${cls}">${head}${esc(x.txt)}${foto}<span class="bt">${x.hora}</span></div>`;
+}
+function burbujas(c, h, yo, extra){
+  const arr = hilo(c,h);
+  const cuerpo = arr.length
+    ? arr.map(x=>burbuja(c,x,yo)).join('')
+    : `<div class="b-sys" style="margin:auto"><span>Todavía no hay mensajes en este hilo.</span></div>`;
+  return cuerpo + (extra||'');
+}
+/* Adjuntar foto: en el prototipo se simula el archivo */
+const FOTOS = ['foto_repuesto.jpg','numero_de_pieza.jpg','tablero_testigo.jpg','pieza_desmontada.jpg','mancha_piso.jpg'];
+let _fi=0;
+function adjuntar(id, h, de){
+  const c=caso(id); const f=FOTOS[(_fi++)%FOTOS.length];
+  decir(c,h,M(de,'Te mando una foto.',horaAhora(),f));
+  render(); toast('Foto adjuntada al chat','🖼');
+  if(de!=='fratello') respuestaMostrador(c,h);
+}
+function horaAhora(){
+  const d=new Date();
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function enviarMsg(id, h, de){
+  const c=caso(id), t=$('#chatin');
+  const txt=(t?t.value:'').trim(); if(!txt) return;
+  decir(c,h,M(de,txt,horaAhora()));
+  S.chatDraft='';
+  render();
+  if(de!=='fratello') respuestaMostrador(c,h);
+}
+/* El mostrador acusa recibo. Es una simulación del prototipo:
+   sirve para que se vea que el hilo es bidireccional. */
+function respuestaMostrador(c,h){
+  clearTimeout(window._resp);
+  window._resp = setTimeout(()=>{
+    const arr=hilo(c,h);
+    if(!arr.length || arr[arr.length-1].de==='fratello') return;
+    decir(c,h,M('fratello', h==='cli'
+      ? 'Recibido, lo miro y te contesto en un rato.'
+      : 'Dale, lo tomo. Cualquier cosa te aviso por acá.', horaAhora()));
+    render();
+  }, 1500);
+}
+function chatHeader(sub){
+  return `<div class="chat-hd"><div class="cav">F</div>
+    <div><div class="cn">Fratello · mostrador</div>
+      <div class="cs"><span class="online">● En línea</span> · ${sub}</div></div></div>`;
+}
+function chatInput(id, h, de){
+  return `<div class="chat-in">
+    <button class="cbtn" title="Adjuntar foto" onclick="adjuntar('${id}','${h}','${de}')">📎</button>
+    <textarea id="chatin" rows="1" placeholder="Escribí tu mensaje…"
+      oninput="S.chatDraft=this.value;document.getElementById('sendb').disabled=!this.value.trim()"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMsg('${id}','${h}','${de}')}">${S.chatDraft||''}</textarea>
+    <button id="sendb" class="cbtn send" ${(S.chatDraft||'').trim()?'':'disabled'}
+      onclick="enviarMsg('${id}','${h}','${de}')">➤</button>
+  </div>`;
+}
+
+function fArmar(){
+  const c=caso(S.fraCaso), t=tal(c.taller), e=ESPECIALIDADES[c.esp];
+  const cat=TRIAGE.find(k=>k.id===c.cat);
+  if(!S.fraDraft || S.fraDraft.id!==c.id){
+    S.fraDraft={id:c.id, manoObra:c.manoObra||'', ops:c.pedido.map(p=>{
+      const o={primera:{p:'',pr:'',d:'stock'},alternativa:{p:'',pr:'',d:'stock'},economica:{p:'',pr:'',d:'stock'}};
+      (p.ops||[]).forEach(x=>{o[x.l]={p:x.p,pr:x.pr,d:x.d}});
+      return o;
+    })};
+  }
+  const D=S.fraDraft, ya=c.estado>=4, ok=validNow();
+  const nomL={primera:'Primera',alternativa:'Alternativa',economica:'Económica'};
+  return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+    <h2>${c.id}</h2><button class="btn btn-ghost btn-sm" onclick="S.fraCaso=null;S.fraDraft=null;render()">← Volver</button></div>
+  <div class="lead">${c.veh.marca} ${c.veh.modelo} ${c.veh.anio}${c.veh.motor&&c.veh.motor!=='—'?' · '+c.veh.motor:''}${c.veh.km?' · '+c.veh.km.toLocaleString('es-AR')+' km':''} · patente ${c.veh.pat}</div>
+
+  <div class="split"><div>
+    <div class="pcard">
+      <div class="phead"><div><h3>Lo que pasó hasta acá</h3>
+        <div class="muted" style="margin-top:3px">${t?t.n+' · '+t.mec:'🔩 Pedido directo del cliente (sin taller)'} · pedido ${c.pedidoEn||'hoy'}</div></div>
+        <span class="badge ${URG[c.urg].c}">${URG[c.urg].s} ${URG[c.urg].n}</span></div>
+      <div class="qgrid">
+        <div class="qcell"><div class="ql">Cliente</div><div class="qv">${c.cliente}</div></div>
+        <div class="qcell"><div class="ql">Contacto</div><div class="qv mono">${c.tel}</div></div>
+        <div class="qcell"><div class="ql">Patente</div><div class="qv mono">${c.veh.pat}</div></div>
+        <div class="qcell"><div class="ql">Especialidad</div><div class="qv">${e.ic} ${e.n}</div></div>
+      </div>
+      <div style="background:var(--surface-2);border-radius:9px;padding:12px 14px;margin-bottom:13px">
+        <div class="ql" style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px">${c.directo?'Origen del pedido':'Triage del cliente en la app'}</div>
+        <div style="font-size:13px">${cat?'<b>'+cat.ic+' '+cat.t+'</b> — ':''}${c.resp.join(' · ')}</div></div>
+      <div style="font-size:13.5px;line-height:1.6;color:var(--ink-2)"><b>${c.directo?'Nota del mostrador:':'Diagnóstico del mecánico:'}</b> ${c.diag||'—'}</div>
+      ${c.nota?`<div class="alert a-info" style="margin-top:13px"><span class="ai">💬</span>
+        <div><b>Nota del mecánico (interna):</b> ${c.nota}</div></div>`:''}
+      ${c.criterio?`<div class="alert a-warn" style="margin-top:13px"><span class="ai">${CRITERIO[c.criterio].s}</span>
+        <div><b>Criterio del cliente: ${CRITERIO[c.criterio].n} (${CRITERIO[c.criterio].tag.toLowerCase()}).</b>
+        ${CRITERIO[c.criterio].mec}</div></div>`:''}
+    </div>
+
+    <div class="pcard">
+      <div class="phead"><h3>Armá las opciones</h3><div style="display:flex;gap:7px;align-items:center">
+        ${c.criterio?`<span class="badge ${CRITERIO[c.criterio].c}">${CRITERIO[c.criterio].s} ${CRITERIO[c.criterio].n}</span>`:''}
+        ${ya?`<span class="badge b-ok">Ya enviado</span>`:''}</div></div>
+      ${c.pedido.map((it,ix)=>{
+        const r=rub(it.rubro), bloq=r.crit&&!it.ecoOk;
+        const recL = c.criterio ? lineaRec(c.criterio, ['primera','alternativa','economica'].filter(l=>!(l==='economica'&&bloq))) : null;
+        return `<div class="qitem">
+          <div class="qitem-t">${r.ic} ${it.desc}</div>
+          <div class="muted" style="margin-bottom:9px">${r.n}${r.crit?' · 🛡 seguridad crítica':''} · cantidad ${it.cant}${it.oem?' · original '+it.oem:''}</div>
+          ${['primera','alternativa','economica'].map(l=>{
+            if(l==='economica'&&bloq) return `<div class="optline" style="opacity:.5">
+              <span class="linetag lt-economica">Económica</span>
+              <div class="muted" style="grid-column:2/-1">🛡 Bloqueada — ${c.directo
+                ?'pedido directo sin diagnóstico previo: no se ofrece línea económica en rubro de seguridad.'
+                :'el mecánico no habilitó línea económica en un rubro de seguridad.'}</div></div>`;
+            const o=D.ops[ix][l];
+            return `<div class="optline${l===recL?' rec':''}">
+              <span class="linetag lt-${l}">${l===recL?'⭐ ':''}${nomL[l]}</span>
+              <input class="inp-sm" placeholder="Marca / producto" value="${o.p}" ${ya?'disabled':''} oninput="S.fraDraft.ops[${ix}].${l}.p=this.value;sync();refreshCot()">
+              <input class="inp-sm mono" type="number" placeholder="Precio" value="${o.pr}" ${ya?'disabled':''} oninput="S.fraDraft.ops[${ix}].${l}.pr=this.value;sync();refreshCot()">
+              <select class="inp-sm" ${ya?'disabled':''} onchange="S.fraDraft.ops[${ix}].${l}.d=this.value;refreshCot()">
+                <option value="stock" ${o.d==='stock'?'selected':''}>En stock</option>
+                <option value="48h" ${o.d==='48h'?'selected':''}>48 h</option>
+                <option value="7d" ${o.d==='7d'?'selected':''}>7 días</option></select>
+              <button class="btn-ghost" title="Limpiar esta línea" style="border-radius:7px;padding:7px 0;text-align:center;font-size:13px;color:var(--ink-3)"
+                ${ya?'disabled':''} onclick="S.fraDraft.ops[${ix}].${l}={p:'',pr:'',d:'stock'};render()">✕</button>
+            </div>`;
+          }).join('')}
+          <div class="muted" style="margin-top:8px">Dejá vacías las líneas que no vas a ofrecer. Al menos una tiene que tener producto y precio.${recL?' La ⭐ es la que el mecánico marcó como criterio del cliente: cargala sí o sí.':''}</div>
+        </div>`;
+      }).join('')}
+      ${c.directo?'':`<div style="max-width:260px;margin-top:14px">
+        <label style="font-size:12px;font-weight:700;display:block;margin-bottom:5px">Mano de obra que informó el taller</label>
+        <input class="inp-sm mono" type="number" placeholder="145000" value="${D.manoObra}" ${ya?'disabled':''} oninput="S.fraDraft.manoObra=this.value;refreshCot()"></div>`}
+      ${!c.pedido.length?`<div class="alert a-info"><span class="ai">⏳</span>
+        <div>El taller todavía no pidió repuestos para este caso. Mientras tanto podés usar los dos hilos de chat de la derecha.</div></div>`
+      :!ya?`<div style="display:flex;gap:10px;margin-top:18px">
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="autollenar()">⚡ Autocompletar (demo)</button>
+        <button id="cta" class="btn btn-primary btn-sm" style="flex:2" ${ok?'':'disabled'} onclick="enviarCotizacion()">📋 Enviar la cotización al chat</button></div>
+        ${ok?'':'<div id="ctahint" class="muted" style="text-align:center;margin-top:9px">Cargá producto y precio en al menos una línea de cada ítem.</div>'}`
+      :`<div class="alert a-ok" style="margin-top:16px"><span class="ai">📋</span>
+        <div><b>Cotización enviada</b> el ${c.cotEnviada||'hoy'}. Quedó publicada en el hilo del cliente; esperando que elija opción.
+        <br><button style="text-decoration:underline;font-weight:750;margin-top:6px" onclick="marcarPago('${c.id}')">Marcar como pagado y despachar →</button></div></div>`}
+    </div>
+  </div>
+
+  <div><div class="pcard" style="position:sticky;top:0;padding:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3 style="font-size:15px">Conversación del caso</h3>
+      <span class="badge b-neutral">${hilo(c,'cli').length + hilo(c,'mec').length} mensajes</span></div>
+    <div class="dtabs">
+      <button class="${S.fraHilo==='cli'?'on':''}" onclick="S.fraHilo='cli';S.chatDraft='';render()">👤 Cliente</button>
+      <button class="${S.fraHilo==='mec'?'on':''}" onclick="S.fraHilo='mec';S.chatDraft='';render()">🔧 Taller${t?' · '+t.mec.split(' ')[0]:''}</button>
+    </div>
+    <div class="dchat" style="border-top-left-radius:0;border-top-right-radius:0;border-top:none">
+      <div class="chat-scroll">
+        ${S.fraHilo==='mec'?`<div class="b-sys"><span>🔒 Hilo interno con el taller. Sin precios y fuera de la vista del cliente.</span></div>`:''}
+        ${burbujas(c, S.fraHilo, 'fratello', S.fraHilo==='cli'&&!ya&&c.pedido.length?borradorCot(c,D):'')}
+      </div>
+      ${chatInput(c.id, S.fraHilo, 'fratello')}
+    </div>
+    <div class="pricenote">Precios de demostración. No son valores reales de mercado.</div>
+  </div></div></div>`;
+}
+/* Borrador vivo de la cotización: se actualiza mientras se cargan precios */
+function borradorCot(c,D){
+  return `<div id="cotbox" class="cotcard" style="opacity:.72;border-style:dashed">
+    <div class="cch" style="background:var(--ink-3)">✎ Borrador · todavía no enviado</div>
+    <div class="ccb">${esc(mensajeCot(c, D.ops, D.manoObra))}</div></div>`;
+}
+function refreshCot(){
+  const c=caso(S.fraCaso), D=S.fraDraft, box=$('#cotbox');
+  if(box) box.innerHTML = `<div class="cch" style="background:var(--ink-3)">✎ Borrador · todavía no enviado</div>
+    <div class="ccb">${esc(mensajeCot(c, D.ops, D.manoObra))}</div>`;
+}
+function autollenar(){
+  const c=caso(S.fraCaso), D=S.fraDraft;
+  const base={frenos:[412000,268000,168000],diesel:[186000,124000,78000],filtros:[64000,42000,26000],
+    suspension:[295000,190000,120000],motor:[220000,145000,92000],lubric:[112000,86000,58000],
+    direccion:[260000,170000,105000],distrib:[195000,132000,84000],embrague:[420000,290000,180000],
+    encendido:[92000,61000,38000],electrico:[310000,205000,128000],refriger:[175000,118000,74000],
+    bateria:[145000,98000,65000],neumaticos:[240000,165000,105000]};
+  const marcas={primera:['Bosch','Mahle','SKF','NGK','Sachs'],alternativa:['Gates','Ferodo','Monroe','Valeo'],economica:['Corven','Wega','Cobreq']};
+  c.pedido.forEach((it,ix)=>{
+    const r=rub(it.rubro), b=base[it.rubro]||[200000,130000,85000];
+    ['primera','alternativa','economica'].forEach((l,li)=>{
+      if(l==='economica'&&r.crit&&!it.ecoOk) return;
+      const mk=marcas[l][ix%marcas[l].length];
+      const fac=1+((ix*17)%9)/22; D.ops[ix][l]={p:mk+' '+(1000+((ix*31+li*7)*137)%8999), pr:Math.round(b[li]*fac/500)*500, d: li===2?'48h':'stock'};
+    });
+  });
+  if(!D.manoObra && !c.directo) D.manoObra = 60000 + c.pedido.length*42000;
+  render(); toast('Precios de demostración cargados','⚡');
+}
+function enviarCotizacion(){
+  const c=caso(S.fraCaso), D=S.fraDraft;
+  c.pedido.forEach((it,ix)=>{
+    const ops=[]; ['primera','alternativa','economica'].forEach(l=>{
+      const o=D.ops[ix][l]; if(o.p&&+o.pr>0) ops.push({l, p:o.p, pr:+o.pr, d:o.d});
+    }); it.ops=ops;
+  });
+  c.manoObra=+D.manoObra||0; c.estado=4; c.cotEnviada='recién';
+  decir(c,'cli',COT(horaAhora()));
+  S.fraHilo='cli';
+  render(); toast('Cotización publicada en el chat del cliente','📋');
+}
+function marcarPago(id){
+  const c=caso(id); c.estado=5;
+  decir(c,'cli',SYS('Pago confirmado · preparamos el pedido'));
+  render(); toast('Pago confirmado. Preparamos el despacho al taller.','💰');
+  setTimeout(()=>{
+    c.estado=6;
+    decir(c,'cli',SYS('El repuesto llegó al taller'));
+    decir(c,'mec',SYS('El repuesto llegó al taller'));
+    render(); toast('Repuesto entregado en el taller.','🚚');
+  },1800);
+}
+function fCasos(){
+  return `<h2>Todos los casos</h2><div class="lead">Cada caso arranca con el triage que hizo el cliente en la app.</div>
+  <table><thead><tr><th>Caso</th><th>Vehículo</th><th>Síntoma declarado</th><th>Especialidad</th><th>Taller</th><th>Estado</th></tr></thead><tbody>
+  ${S.casos.map(c=>{const t=tal(c.taller),e=ESPECIALIDADES[c.esp],cat=TRIAGE.find(k=>k.id===c.cat);
+    return `<tr onclick="S.fra='pedidos';S.fraCaso='${c.id}';S.fraDraft=null;render()">
+    <td class="mono" style="font-weight:700">${c.id}</td>
+    <td><b>${c.veh.marca} ${c.veh.modelo}</b> ${c.veh.anio}</td>
+    <td style="color:var(--ink-3);font-size:12.5px">${cat?cat.ic+' '+cat.t:''} — ${c.resp[0]||''}</td>
+    <td>${e.ic} ${e.n}</td><td>${t?t.n:'—'}</td>
+    <td><span class="badge ${estadoDe(c).c}">${estadoDe(c).n}</span></td></tr>`}).join('')}
+  </tbody></table>`;
+}
+function fRanking(){
+  const R=ranking();
+  const act=TALLERES.filter(t=>stats(t).estado==='Activa').length;
+  const obs=TALLERES.filter(t=>stats(t).estado==='En observación').length;
+  const rev=TALLERES.filter(t=>stats(t).estado==='En revisión').length;
+  const totCasos=TALLERES.reduce((a,t)=>a+t.st.casos,0);
+  const totPed=TALLERES.reduce((a,t)=>a+t.st.pedidos,0);
+  return `<h2>Ranking de mecánicos</h2>
+  <div class="lead">Ordenados por índice de lealtad. Aparecen todos; los primeros 50 llevan la insignia Top 50.</div>
+  <div class="kpis">
+    <div class="kpi"><div class="kv" style="color:var(--ok)">${act}</div><div class="kl">Cuentas activas</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--warn)">${obs}</div><div class="kl">En observación</div></div>
+    <div class="kpi"><div class="kv" style="color:var(--crit)">${rev}</div><div class="kl">En revisión</div></div>
+    <div class="kpi"><div class="kv">${Math.round(totPed/totCasos*100)}%</div><div class="kl">Tasa de pedido de la red</div></div>
+  </div>
+
+  <div class="alert a-info" style="margin-bottom:16px"><span class="ai">📐</span>
+    <div><b>Cómo se calcula.</b> <b>Tasa de pedido</b> = pedidos que nos hizo ÷ (casos que le mandamos − trabajos que declaró sin repuesto).
+    Mide si el taller usa la app para trabajar con nosotros o solo para captar clientes.
+    <b>Índice de lealtad</b> = compras cerradas ÷ esos mismos casos, y es el que ordena el ranking.
+    Los trabajos declarados sin repuesto se descuentan: un service de mano de obra no puede penalizar a un taller honesto.</div></div>
+
+  ${rev?`<div class="alert a-crit" style="margin-bottom:16px"><span class="ai">🚩</span>
+    <div><b>${rev} taller${rev>1?'es':''} en revisión.</b> Reciben muchos casos y casi no nos piden repuestos. Antes de suspender, conviene llamarlos: puede haber una explicación (obra social de flota, convenio con otro proveedor, trabajos de chapa).</div></div>`:''}
+
+  <table><thead><tr><th>#</th><th>Taller</th><th>Zona</th><th>Casos</th><th>Sin rep.</th><th>Pedidos</th>
+    <th>Compras</th><th>Tasa de pedido</th><th>Lealtad</th><th>Estado</th></tr></thead><tbody>
+  ${R.map((t,i)=>{const k=stats(t);
+    return `<tr>
+      <td class="mono" style="font-weight:800;white-space:nowrap">${i+1}${i<50?' <span class="badge b-match" style="font-size:8.5px;padding:2px 5px;letter-spacing:.04em">TOP&nbsp;50</span>':''}</td>
+      <td><b>${t.n}</b><br><span style="color:var(--ink-3);font-size:12px">${t.mec}</span></td>
+      <td style="font-size:12.5px">${t.zona}</td>
+      <td class="mono">${t.st.casos}</td>
+      <td class="mono" style="color:var(--ink-3)">${t.st.sinRep}</td>
+      <td class="mono" style="font-weight:700">${t.st.pedidos}</td>
+      <td class="mono">${t.st.comprados}</td>
+      <td class="mono"><b>${pct(k.tasaPedido)}</b></td>
+      <td class="mono">${pct(k.lealtad)}</td>
+      <td><span class="badge ${k.cls}">${k.estado}</span></td></tr>`;
+  }).join('')}
+  </tbody></table>
+
+  <div class="pcard" style="margin-top:18px">
+    <h3 style="font-size:15px;margin-bottom:10px">Reglas de la cuenta del mecánico</h3>
+    <table style="box-shadow:none"><thead><tr><th>Tasa de pedido</th><th>Estado</th><th>Qué pasa</th></tr></thead><tbody>
+      <tr style="cursor:default"><td class="mono">≥ 60%</td><td><span class="badge b-ok">Activa</span></td>
+        <td>Recibe casos con prioridad y cobra la comisión completa.</td></tr>
+      <tr style="cursor:default"><td class="mono">35% – 59%</td><td><span class="badge b-warn">En observación</span></td>
+        <td>Sigue recibiendo casos, pero después de los talleres activos. Se le avisa en su panel.</td></tr>
+      <tr style="cursor:default"><td class="mono">&lt; 35%</td><td><span class="badge b-crit">En revisión</span></td>
+        <td>Deja de recibir casos nuevos hasta que un encargado lo contacte y regularice.</td></tr>
+    </tbody></table>
+    <div class="muted" style="margin-top:12px">El taller ve su propio número en tiempo real, no una sanción sorpresa. Un mecánico que sabe cómo se lo mide corrige antes de que haya que suspenderlo.</div>
+  </div>
+
+  <div class="pcard">
+    <h3 style="font-size:15px;margin-bottom:10px">Especialidades (definen el matching)</h3>
+    <table style="box-shadow:none"><thead><tr><th>Taller</th><th>Especialidades habilitadas</th></tr></thead><tbody>
+    ${TALLERES.map(t=>`<tr style="cursor:default"><td><b>${t.n}</b></td>
+      <td style="font-size:12px">${t.esp.map(e=>`<span class="badge b-neutral" style="margin:1px">${ESPECIALIDADES[e].ic} ${ESPECIALIDADES[e].n}</span>`).join(' ')}</td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+function fClientes(){
+  return `<h2>Clientes</h2>
+  <div class="lead">Una cuenta por vehículo. El usuario es la patente, y cada cuenta tiene su tarjeta verde para identificar el vehículo sin ambigüedad.</div>
+  <div class="alert a-warn" style="margin-bottom:16px"><span class="ai">🔒</span>
+    <div><b>Dato sensible.</b> La tarjeta verde incluye domicilio y DNI del titular. Acceso solo para mostrador y encargado, con registro de quién la abrió. No se descarga ni se reenvía por fuera del sistema.</div></div>
+  <table><thead><tr><th>Patente (usuario)</th><th>Titular</th><th>WhatsApp</th><th>Vehículo</th><th>Tarjeta verde</th><th>Casos</th><th></th></tr></thead><tbody>
+  ${CLIENTES.map(c=>`<tr style="cursor:default">
+    <td class="mono" style="font-weight:800;letter-spacing:.05em">${c.pat}</td>
+    <td><b>${c.nombre}</b><br><span style="color:var(--ink-3);font-size:12px">Titular: ${c.tv.titular}</span></td>
+    <td class="mono">${c.tel}</td>
+    <td>${c.veh.marca?`${c.veh.marca} ${c.veh.modelo} ${c.veh.anio}<br><span style="color:var(--ink-3);font-size:12px">${c.veh.motor} · ${c.veh.km?Number(c.veh.km).toLocaleString('es-AR')+' km':''}</span>`:'<span style="color:var(--ink-3)">sin cargar</span>'}</td>
+    <td>${c.tv.verif?'<span class="badge b-ok">✅ Verificada</span>':'<span class="badge b-warn">⏳ Sin verificar</span>'}
+      <br><span style="color:var(--ink-3);font-size:11px">${c.tv.subida}</span></td>
+    <td class="mono">${c.casos}</td>
+    <td><div style="display:flex;gap:6px;justify-content:flex-end;white-space:nowrap">
+      <button class="btn btn-ghost btn-sm" style="display:inline-flex" onclick="verTV('${c.pat}')">📄 Ver tarjeta</button>
+      <button class="btn btn-ghost btn-sm" style="display:inline-flex" onclick="toast('Abriría el chat con ${c.nombre}','💬')">💬 Chat</button></div></td></tr>`).join('')}
+  </tbody></table>
+  <div class="pcard" style="margin-top:18px">
+    <h3 style="font-size:15px;margin-bottom:8px">Por qué pedimos la tarjeta verde</h3>
+    <div class="muted" style="color:var(--ink-2);font-size:13px;line-height:1.6">
+      El error más caro del rubro es vender el repuesto de otra versión del mismo modelo. Marca, modelo y año no alcanzan:
+      una Hilux 2018 puede ser 2.4 o 3.0, con o sin ABS, y la pinza de freno es distinta. La tarjeta verde trae el
+      <b>dominio, la marca, el modelo, el año y el número de chasis y motor</b>, que es lo que cierra la aplicación exacta.
+      Además evita que alguien cargue una patente que no es suya.</div></div>`;
+}
+function verTV(pat){
+  const c=CLIENTES.find(x=>x.pat===pat);
+  toast('Abriría '+c.tv.arch+' desde el Drive de Fratello','📄');
+}
+
+function fMarcas(){
+  return `<h2>Catálogo de marcas</h2><div class="lead">Lo que ve el cliente en "Nuestras marcas".</div>
+  <div class="alert a-warn" style="margin-bottom:16px"><span class="ai">⚠️</span>
+    <div><b>Listado de demostración.</b> Son marcas de presencia habitual en el mercado argentino de reposición, no el catálogo real de Fratello. Hay que reemplazarlo por el listado efectivo antes de publicar.</div></div>
+  <table><thead><tr><th>Marca</th><th>Origen</th><th>Línea</th></tr></thead><tbody>
+  ${MARCAS.map(m=>`<tr><td><b>${m.n}</b></td><td>${m.p}</td>
+    <td><span class="linetag lt-${m.l}" style="width:auto;padding:3px 10px">${m.l}</span></td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+/* ================= RENDER ================= */
+/* ================= PUERTA DE ENTRADA =================
+   Una sola pantalla de login. El rol se DEDUCE de la cuenta:
+   patente -> cliente, usuario de mecánico -> taller, usuario interno -> Fratello. */
+function vAcceso(){
+  const D=S.door;
+  return `<div class="phone"><div class="phone-status"><span>9:41</span><span>Fratello</span><span>▮▮ 87%</span></div>
+    <div class="body">
+      <div class="login-hero">
+        <div class="logo-xl"><div class="mark">F</div>
+          <div class="name">Fratello<small>Repuestos · Córdoba</small></div></div>
+        <h2>Entrá a tu cuenta</h2>
+        <p>Una sola puerta. Según con qué entres, te llevamos a tu parte.</p>
+      </div>
+      <div class="pad">
+        <div class="field"><label>Patente o usuario</label>
+          <input class="inp" style="letter-spacing:.03em;font-weight:650" value="${D.id}"
+            oninput="S.door.id=this.value" placeholder="AB123CD  ·  ruben  ·  mostrador"></div>
+        <div class="field"><label>Contraseña</label>
+          <input class="inp" type="password" value="${D.pass}" oninput="S.door.pass=this.value"
+            onkeydown="if(event.key==='Enter')hacerAcceso()" placeholder="••••••••"></div>
+        ${D.err?`<div class="alert a-crit" style="margin-bottom:14px"><span class="ai">⚠️</span><div>${D.err}</div></div>`:''}
+        <button class="btn btn-primary" onclick="hacerAcceso()">Ingresar</button>
+        <button class="btn btn-ghost" style="margin-top:10px" onclick="S.role='cliente';S.cli='home';S.entered=true;S.demo=true;render()">Explorar como invitado</button>
+        <div class="hr"></div>
+        <div class="demo-keys">
+          <div class="dk-t">🔑 Cuentas de prueba — tocá para autocompletar</div>
+          <button class="dk" onclick="S.door={id:'AB123CD',pass:'hilux2018',err:''};render()"><b>👤 Cliente</b><span class="mono">AB123CD · hilux2018</span></button>
+          <button class="dk" onclick="S.door={id:'ruben',pass:'taller1',err:''};render()"><b>🔧 Mecánico</b><span class="mono">ruben · taller1</span></button>
+          <button class="dk" onclick="S.door={id:'mostrador',pass:'fratello',err:''};render()"><b>🏢 Panel Fratello</b><span class="mono">mostrador · fratello</span></button>
+        </div>
+        <div style="height:20px"></div>
+      </div>
+    </div></div>`;
+}
+function hacerAcceso(){
+  const D=S.door, id=(D.id||'').trim();
+  const cli = CLIENTES.find(c=>c.pat===id.toUpperCase() && c.pass===D.pass);
+  if(cli){ S.role='cliente'; S.user=cli; S.logged=true; S.nombre=cli.nombre; S.tel=cli.tel; S.cli='home';
+    return entrar('Hola '+cli.nombre.split(' ')[0]+'!','👋'); }
+  const mec = MECANICOS.find(m=>m.user===id.toLowerCase() && m.pass===D.pass);
+  if(mec){ S.role='mecanico'; S.mecUser=mec; S.mec='home'; return entrar(mec.taller,'🔧'); }
+  const fra = FRATELLO.find(f=>f.user===id.toLowerCase() && f.pass===D.pass);
+  if(fra){ S.role='fratello'; S.fraUser=fra; S.fra='pedidos'; return entrar('Panel Fratello','🏢'); }
+  S.door.err='Usuario o contraseña incorrectos. Probá una cuenta de prueba.'; render();
+}
+function entrar(msg,ic){ S.entered=true; S.demo=false; S.door={id:'',pass:'',err:''}; render(); toast(msg,ic); }
+function salir(){ S.entered=false; S.demo=false; S.logged=false; S.user=null; S.door={id:'',pass:'',err:''}; render(); }
+
+function render(){
+  document.querySelectorAll('#rolesw button').forEach(b=>b.classList.toggle('on',b.dataset.r===S.role));
+  $('#stage').innerHTML = !S.entered ? vAcceso()
+    : S.role==='cliente'?vCliente():S.role==='mecanico'?vMecanico():vFratello();
+  /* el chat siempre abre en el último mensaje */
+  document.querySelectorAll('.chat-scroll').forEach(el=>{ el.scrollTop = el.scrollHeight; });
+}
+/* Página exclusiva del cliente: entra directo a la experiencia del cliente */
+S.role='cliente'; S.entered=true; S.cli='home';
+render();
+</script>
+</body>
+</html>
