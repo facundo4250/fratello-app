@@ -667,6 +667,29 @@ table{border-radius:14px}
 .demo-keys .dk:hover{border-color:var(--brand);background:var(--brand-soft);transform:translateX(3px)}
 .demo-keys .dk b{font-size:13.5px;font-weight:750}
 .demo-keys .dk span{font-size:12px;color:var(--ink-3)}
+
+/* --- home del cliente: búsqueda, confianza, categorías --- */
+.hsearch{display:flex;gap:8px;margin-top:17px;position:relative;z-index:2}
+.hsearch-inp{flex:1;min-width:0;border:none;border-radius:12px;padding:13px 15px;font-size:15px;font-weight:750;
+  letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,.97);color:var(--ink);outline:none;
+  box-shadow:0 8px 20px -8px rgba(0,0,0,.45)}
+.hsearch-inp::placeholder{color:#9AA6B2;font-weight:600;letter-spacing:.03em}
+.hsearch-btn{flex-shrink:0;border-radius:12px;padding:0 18px;font-weight:800;font-size:13.5px;color:#fff;
+  background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));
+  box-shadow:0 8px 20px -7px rgba(212,32,39,.75);transition:transform .16s var(--ease)}
+.hsearch-btn:hover{transform:translateY(-1px)}
+.hsearch-btn:active{transform:translateY(0)}
+.tstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.tstat{background:var(--surface);padding:14px 8px;text-align:center}
+.tstat .tv{font-size:19px;font-weight:800;color:var(--brand-dark);letter-spacing:-.02em;line-height:1}
+.tstat .tl{font-size:10.5px;color:var(--ink-3);font-weight:600;margin-top:5px;line-height:1.25}
+.catgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.catcell{display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 5px;border-radius:13px;
+  border:1.5px solid var(--line);background:var(--surface);transition:all .16s var(--ease)}
+.catcell:hover{border-color:var(--brand);background:var(--brand-soft);transform:translateY(-2px);
+  box-shadow:0 10px 20px -12px rgba(212,32,39,.5)}
+.catcell .ci{font-size:22px;line-height:1}
+.catcell .cn{font-size:10px;font-weight:700;color:var(--ink-2);text-align:center;line-height:1.15}
 </style>
 </head>
 <body>
@@ -1322,9 +1345,22 @@ function cHome(){
     <div class="hero">
       <div class="eyebrow">Casa de repuestos · Córdoba</div>
       <h2>No te vendemos un repuesto.<br>Te resolvemos el problema.</h2>
-      <p>Tres caminos según lo que sepas: ya sabés qué repuesto necesitás, no sabés qué tiene el auto, o querés que lo vea un mecánico de la red.</p>
+      <p>Decinos tu patente o qué le pasa al auto. Del repuesto exacto nos encargamos nosotros.</p>
+      <div class="hsearch">
+        <input id="homePat" class="hsearch-inp" placeholder="Tu patente"
+          oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"
+          onkeydown="if(event.key==='Enter')buscarRepuesto()">
+        <button class="hsearch-btn" onclick="buscarRepuesto()">Buscar</button>
+      </div>
+    </div>
+    <div class="tstrip">
+      <div class="tstat"><div class="tv">40+</div><div class="tl">años en Córdoba</div></div>
+      <div class="tstat"><div class="tv">🚚</div><div class="tl">Envío a la provincia</div></div>
+      <div class="tstat"><div class="tv">24h</div><div class="tl">Auxilio en la calle</div></div>
     </div>
 
+    <div class="sect" style="border-top:none;padding-bottom:2px">
+      <h3 style="margin-bottom:0">¿Cómo te ayudamos?</h3></div>
     <div class="acts">
       <button class="act act-main" onclick="irRepuestos()">
         <span class="apill">Lo más rápido</span>
@@ -1353,6 +1389,14 @@ function cHome(){
     ${wa?`<div style="padding:16px 18px 0"><div class="alert a-info"><span class="ai">💬</span>
       <div><b>Tenés un mensaje del mostrador.</b> Están las opciones de repuesto para tu Hilux esperando respuesta.
       <br><button style="text-decoration:underline;font-weight:750;margin-top:4px" onclick="abrirChat('FR-00202')">Abrir el chat →</button></div></div></div>`:''}
+
+    <div class="sect">
+      <h3>Categorías más pedidas</h3>
+      <div class="catgrid">
+        ${RUBROS.slice(0,8).map(r=>`<button class="catcell" onclick="categoriaRepuesto('${r.id}')"><span class="ci">${r.ic}</span><span class="cn">${r.n}</span></button>`).join('')}
+      </div>
+      <div style="margin-top:12px"><button class="btn btn-ghost btn-sm" style="width:100%" onclick="irRepuestos()">Cotizar por patente →</button></div>
+    </div>
 
     <div class="sect">
       <h3>Por qué no somos una casa de repuestos más</h3>
@@ -1896,6 +1940,14 @@ function cCaso(){
 let RI=0;
 const nuevoRep = () => ({id:'d'+(++RI), rubro:'', desc:'', oem:'', cant:1});
 
+function buscarRepuesto(){
+  const el=document.getElementById('homePat');
+  const pat=el?el.value.toUpperCase().replace(/[^A-Z0-9]/g,''):'';
+  irRepuestos();
+  if(pat) S.rep.veh.pat=pat;
+  render();
+}
+function categoriaRepuesto(rid){ irRepuestos(); if(S.rep&&S.rep.items[0]) S.rep.items[0].rubro=rid; render(); }
 function irRepuestos(){
   if(!S.rep){
     const u=S.user;
