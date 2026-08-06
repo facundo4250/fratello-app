@@ -688,8 +688,50 @@ table{border-radius:14px}
   border:1.5px solid var(--line);background:var(--surface);transition:all .16s var(--ease)}
 .catcell:hover{border-color:var(--brand);background:var(--brand-soft);transform:translateY(-2px);
   box-shadow:0 10px 20px -12px rgba(212,32,39,.5)}
-.catcell .ci{font-size:22px;line-height:1}
 .catcell .cn{font-size:10px;font-weight:700;color:var(--ink-2);text-align:center;line-height:1.15}
+
+/* --- capa premium: íconos SVG + hero elevado --- */
+:root{--gold:#EBB24A; --gold-2:#C6871E}
+svg{display:block}
+/* íconos de los accesos */
+.act .ai2 svg{width:24px;height:24px}
+.act .ai2{color:var(--ink-2)}
+.act-main .ai2{color:#fff}
+.act-sos .ai2{color:var(--sos)}
+.act-mec .ai2{color:var(--navy)}
+/* franja de confianza con ícono */
+.tstat{padding:15px 8px 14px}
+.tstat .tico{width:22px;height:22px;margin:0 auto 7px;color:var(--brand)}
+.tstat .tico svg{width:22px;height:22px}
+.tstat .tv{font-size:13.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em;line-height:1.15}
+.tstat .tl{font-size:10px;color:var(--ink-3);font-weight:600;margin-top:2px;line-height:1.2}
+/* categorías */
+.catcell .ci{width:26px;height:26px;line-height:0;color:var(--brand-dark)}
+.catcell .ci svg{width:26px;height:26px}
+/* barra inferior */
+.tabbar button .ti{line-height:0}
+.tabbar button .ti svg{width:23px;height:23px}
+/* hero elevado: profundidad, textura tech, brillo rojo y filo dorado */
+.hero{
+  padding:34px 22px 30px;
+  box-shadow:inset 0 -2px 0 rgba(235,178,74,.45);
+  background:
+    radial-gradient(520px 300px at 85% -18%, rgba(232,64,56,.5), transparent 60%),
+    linear-gradient(158deg,#1C2C40 0%, #0A1420 96%);
+}
+.hero::before{
+  content:'';position:absolute;inset:0;opacity:1;
+  background-image:repeating-linear-gradient(125deg, rgba(255,255,255,.04) 0 1px, transparent 1px 8px);
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 88%);mask-image:linear-gradient(180deg,#000,transparent 88%);
+}
+.hero::after{right:-60px;top:-60px;width:230px;height:230px;
+  background:radial-gradient(circle,rgba(232,64,56,.42),transparent 68%);filter:blur(3px)}
+.hero .eyebrow{color:var(--gold);letter-spacing:.2em;display:inline-flex;align-items:center;gap:9px}
+.hero .eyebrow::after{content:'';width:26px;height:1.5px;background:linear-gradient(90deg,var(--gold),transparent)}
+.hero h2{font-size:27px;letter-spacing:-.035em;line-height:1.1}
+.hero p{font-size:13.5px;color:#AEC0D4;max-width:300px}
+/* filo dorado sutil bajo el logo del appbar */
+.logo .mark{box-shadow:0 3px 10px rgba(212,32,39,.4), inset 0 1px 0 rgba(255,255,255,.4), 0 0 0 1px rgba(235,178,74,.35)}
 </style>
 </head>
 <body>
@@ -1307,6 +1349,31 @@ function sync(){
   const h=$('#ctahint'); if(h) h.style.display= ok?'none':'block';
 }
 
+/* ===== Set de íconos SVG (línea, currentColor) — reemplazan a los emojis ===== */
+const _sv = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const IC = {
+  parts:_sv('<circle cx="12" cy="12" r="7.2"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7 5.6 5.6"/>'),
+  alert:_sv('<path d="M10.3 4.4 2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 4.4a2 2 0 0 0-3.4 0Z"/><path d="M12 9.5v4"/><path d="M12 17h.01"/>'),
+  wrench:_sv('<path d="M15.6 6.4a4 4 0 0 1-5.2 5.2l-5 5a2 2 0 1 0 2.8 2.8l5-5a4 4 0 0 1 5.2-5.2l-2.6 2.6-2.2-.4-.4-2.2 2.4-2.6Z"/>'),
+  shield:_sv('<path d="M12 3 5 5.5v5.2c0 4.3 3 7.4 7 8.8 4-1.4 7-4.5 7-8.8V5.5L12 3Z"/>'),
+  truck:_sv('<rect x="2.5" y="6.5" width="11" height="9" rx="1"/><path d="M13.5 9.5H17l3.5 3v3h-7z"/><circle cx="6.5" cy="17.3" r="1.6"/><circle cx="16.4" cy="17.3" r="1.6"/>'),
+  clock:_sv('<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/>'),
+  home:_sv('<path d="M4 11 12 4l8 7"/><path d="M6 9.8V19h12V9.8"/>'),
+  box:_sv('<path d="M12 3.5 20 7.5v9L12 20.5 4 16.5v-9Z"/><path d="M4 7.5l8 4 8-4M12 11.5v9"/>'),
+  doc:_sv('<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M9.5 12.5h6M9.5 16h6"/>'),
+  user:_sv('<circle cx="12" cy="8.5" r="3.5"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>'),
+  cat:{
+    frenos:_sv('<circle cx="10.5" cy="12" r="7.5"/><circle cx="10.5" cy="12" r="2.4"/><path d="M18 9.5h3.5v5H18"/>'),
+    direccion:_sv('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2"/><path d="M12 14v6.4M13.8 12.7l5.5 3.2M10.2 12.7 4.7 15.9"/>'),
+    suspension:_sv('<path d="M8.5 3.5h7M8.5 20.5h7"/><path d="M9 3.5 15 7.5 9 11.5 15 15.5 9 19.5"/>'),
+    neumaticos:_sv('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.8"/>'),
+    filtros:_sv('<rect x="6.5" y="4.5" width="11" height="15" rx="3"/><path d="M6.5 9.5h11M6.5 13.5h11"/>'),
+    motor:_sv('<path d="M3.5 10.5H6V8h3.5l2-2H15v2.5h2l3 2.5v5h-2v2H8.5v-2h-2.5v-2H3.5z"/>'),
+    distrib:_sv('<circle cx="7.5" cy="14.5" r="3.5"/><circle cx="16" cy="9" r="2.5"/><path d="M7.9 11.1 15 6.9M9.9 16.8 17.2 12.4"/>'),
+    embrague:_sv('<circle cx="12" cy="12" r="7.5"/><path d="M12 4.5v3M12 16.5v3M4.5 12h3M16.5 12h3M6.7 6.7 8.8 8.8M15.2 15.2l2.1 2.1M17.3 6.7 15.2 8.8M8.8 15.2 6.7 17.3"/>'),
+  },
+};
+
 /* ================= CLIENTE ================= */
 function vCliente(){
   const v={home:cHome,marcas:cMarcas,triage:cTriage,resultado:cResultado,mecanicos:cMecanicos,
@@ -1321,11 +1388,11 @@ const go = v => { S.cli=v; render(); };
 function tabbar(){
   const on = k => S.cli===k?'on':'';
   const t = [
-    ['home','🏠','Inicio',()=>"go('home')"],
-    ['repuestos','🔩','Repuestos',()=>"irRepuestos()"],
-    ['auxilio','🆘','SOS',()=>"irAuxilio()"],
-    ['casos','📋','Mis casos',()=>"go(S.logged?'casos':'login')"],
-    ['cuenta','👤','Cuenta',()=>"go(S.logged?'cuenta':'login')"],
+    ['home',IC.home,'Inicio',()=>"go('home')"],
+    ['repuestos',IC.box,'Repuestos',()=>"irRepuestos()"],
+    ['auxilio',IC.alert,'SOS',()=>"irAuxilio()"],
+    ['casos',IC.doc,'Mis casos',()=>"go(S.logged?'casos':'login')"],
+    ['cuenta',IC.user,'Cuenta',()=>"go(S.logged?'cuenta':'login')"],
   ];
   return `<div class="tabbar">${t.map(([k,i,n,f])=>
     `<button class="${on(k)} ${k==='auxilio'?'sos':''}" onclick="${f()}">
@@ -1348,9 +1415,9 @@ function cHome(){
       <p>Tres caminos según lo que sepas: ya sabés qué necesitás, no sabés qué tiene el auto, o querés que lo vea un mecánico de la red.</p>
     </div>
     <div class="tstrip">
-      <div class="tstat"><div class="tv">40+</div><div class="tl">años en Córdoba</div></div>
-      <div class="tstat"><div class="tv">🚚</div><div class="tl">Envío a la provincia</div></div>
-      <div class="tstat"><div class="tv">24h</div><div class="tl">Auxilio en la calle</div></div>
+      <div class="tstat"><div class="tico">${IC.shield}</div><div class="tv">40+ años</div><div class="tl">en Córdoba</div></div>
+      <div class="tstat"><div class="tico">${IC.truck}</div><div class="tv">Envío</div><div class="tl">a la provincia</div></div>
+      <div class="tstat"><div class="tico">${IC.clock}</div><div class="tv">Auxilio 24 h</div><div class="tl">en la calle</div></div>
     </div>
 
     <div class="sect" style="border-top:none;padding-bottom:2px">
@@ -1358,7 +1425,7 @@ function cHome(){
     <div class="acts">
       <button class="act act-main" onclick="irRepuestos()">
         <span class="apill">Lo más rápido</span>
-        <div class="ai2">🔩</div>
+        <div class="ai2">${IC.parts}</div>
         <div><div class="at">Solo repuestos</div>
           <div class="ad">Ya sabés qué necesitás o tenés el número de pieza. Cotizamos por patente y te contestamos en el chat.</div></div>
         <span class="aa">›</span>
@@ -1366,14 +1433,14 @@ function cHome(){
 
       <button class="act act-sos" onclick="irAuxilio()">
         <span class="apill">SOS 24 h</span>
-        <div class="ai2">🆘</div>
+        <div class="ai2">${IC.alert}</div>
         <div><div class="at">No sé qué tiene</div>
           <div class="ad">Quedaste parado, no arranca o anda raro y no sabés por qué. Te mandamos un móvil que lo revisa donde estés.</div></div>
         <span class="aa">›</span>
       </button>
 
       <button class="act act-mec" onclick="startTriage()">
-        <div class="ai2">🔧</div>
+        <div class="ai2">${IC.wrench}</div>
         <div><div class="at">Contactar con un mecánico</div>
           <div class="ad">Turno con el especialista correcto: él diagnostica, nos pide el repuesto y nosotros cerramos el precio con vos.</div></div>
         <span class="aa">›</span>
@@ -1387,7 +1454,7 @@ function cHome(){
     <div class="sect">
       <h3>Categorías más pedidas</h3>
       <div class="catgrid">
-        ${RUBROS.slice(0,8).map(r=>`<button class="catcell" onclick="categoriaRepuesto('${r.id}')"><span class="ci">${r.ic}</span><span class="cn">${r.n}</span></button>`).join('')}
+        ${RUBROS.slice(0,8).map(r=>`<button class="catcell" onclick="categoriaRepuesto('${r.id}')"><span class="ci">${IC.cat[r.id]||r.ic}</span><span class="cn">${r.n}</span></button>`).join('')}
       </div>
       <div style="margin-top:12px"><button class="btn btn-ghost btn-sm" style="width:100%" onclick="irRepuestos()">Cotizar por patente →</button></div>
     </div>
