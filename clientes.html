@@ -1316,7 +1316,14 @@ function toast(m,i='✓'){
   $('#toast-root').innerHTML = '<div class="toast"><span>'+i+'</span>'+m+'</div>';
   clearTimeout(window._t); window._t=setTimeout(()=>{$('#toast-root').innerHTML=''},3200);
 }
+/* ===== Persistencia por cuenta (localStorage): cada cuenta guarda sus chats ===== */
+function cuentaKey(){ return 'fratello_casos_' + (S.user ? S.user.pat : 'invitado'); }
+function guardarCasos(){ try{ localStorage.setItem(cuentaKey(), JSON.stringify(S.casos)); }catch(e){} }
+function cargarCasos(){ try{ const s=localStorage.getItem(cuentaKey()); if(s) return JSON.parse(s); }catch(e){} return null; }
+function guardarSesion(){ try{ if(S.user) localStorage.setItem('fratello_sesion', S.user.pat); }catch(e){} }
+
 function resetDemo(){
+  try{ localStorage.removeItem(cuentaKey()); localStorage.removeItem('fratello_casos_invitado'); localStorage.removeItem('fratello_sesion'); }catch(e){}
   if(typeof _aux!=='undefined') clearInterval(_aux);
   S.casos=seed(); S.cli='home'; S.tri=null; S.form=null; S.logged=false; S.user=null;
   S.entered=true; S.demo=false; S.role='cliente'; S.cli='home'; S.door={id:'',pass:'',err:''};
@@ -1650,6 +1657,8 @@ function hacerLogin(){
   const u = CLIENTES.find(c=>c.pat===L.pat.trim() && c.pass===L.pass);
   if(!u){ L.err='Patente o contraseña incorrecta. Si es la primera vez, registrate.'; render(); return; }
   S.user=u; S.logged=true; S.nombre=u.nombre; S.tel=u.tel; S.login={pat:'',pass:'',err:''};
+  const _sv=cargarCasos(); if(_sv) S.casos=_sv;  /* trae los chats guardados de esta cuenta */
+  guardarSesion();
   if(S.tallerElegido) prepararDatos(); else go('casos');
   toast('Hola '+u.nombre.split(' ')[0]+'!','👋');
 }
@@ -3181,10 +3190,16 @@ function render(){
   document.querySelectorAll('#rolesw button').forEach(b=>b.classList.toggle('on',b.dataset.r===S.role));
   $('#stage').innerHTML = !S.entered ? vAcceso()
     : S.role==='cliente'?vCliente():S.role==='mecanico'?vMecanico():vFratello();
+  guardarCasos();  /* persiste chats y casos de la cuenta activa */
   /* el chat siempre abre en el último mensaje */
   document.querySelectorAll('.chat-scroll').forEach(el=>{ el.scrollTop = el.scrollHeight; });
 }
-/* Página exclusiva del cliente: entra directo a la experiencia del cliente */
+/* Página exclusiva del cliente: entra directo a la experiencia del cliente.
+   Si había una sesión guardada, la restaura y trae sus chats. */
+try{ const _p=localStorage.getItem('fratello_sesion');
+  if(_p){ const _u=CLIENTES.find(c=>c.pat===_p); if(_u){ S.user=_u; S.logged=true; S.nombre=_u.nombre; S.tel=_u.tel; } }
+}catch(e){}
+{ const _sv=cargarCasos(); if(_sv) S.casos=_sv; }
 S.role='cliente'; S.entered=true; S.cli='home';
 render();
 </script>
