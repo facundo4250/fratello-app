@@ -18,7 +18,7 @@
   --ink:#111820; --ink-2:#37424F; --ink-3:#6B7785;
   --line:#E3E8EE; --line-2:#F0F3F7;
   --bg:#EEF1F5; --surface:#FFFFFF; --surface-2:#F7F9FB;
-  --brand:#E0531C; --brand-dark:#B33F12; --brand-soft:#FDEFE9;
+  --brand:#D42027; --brand-dark:#9E1218; --brand-soft:#FCEBEA;
   --navy:#16304E; --wa:#25D366; --wa-dark:#128C7E; --wa-bubble:#DCF8C6;
   --ok:#12704A; --ok-soft:#E6F4EE;
   --warn:#9A5B06; --warn-soft:#FDF3E2;
@@ -68,14 +68,14 @@ input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
 .pad{padding:18px}
 
 .hero{background:linear-gradient(155deg,var(--navy) 0%,#0C1E33 100%);color:#fff;padding:26px 20px 24px;position:relative;overflow:hidden}
-.hero::after{content:'';position:absolute;right:-45px;top:-45px;width:180px;height:180px;border-radius:50%;background:rgba(224,83,28,.17)}
+.hero::after{content:'';position:absolute;right:-45px;top:-45px;width:180px;height:180px;border-radius:50%;background:rgba(212,32,39,.17)}
 .hero .eyebrow{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);position:relative;margin-bottom:9px}
 .hero h2{font-size:23px;font-weight:800;letter-spacing:-.025em;line-height:1.18;position:relative}
 .hero p{font-size:13.5px;color:#B4C3D4;margin-top:9px;position:relative;line-height:1.5}
 
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px 18px;
   border-radius:11px;font-weight:700;font-size:14.5px;transition:all .15s;text-align:center}
-.btn-primary{background:var(--brand);color:#fff;box-shadow:0 3px 12px rgba(224,83,28,.32)}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:0 3px 12px rgba(212,32,39,.32)}
 .btn-primary:hover{background:var(--brand-dark)}
 .btn-primary:disabled{background:#C9D0D8;color:#fff;box-shadow:none;cursor:not-allowed}
 .btn-ghost{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
@@ -291,7 +291,7 @@ tbody tr:hover{background:var(--surface-2)}
    profundidad real (luz desde arriba) y estados táctiles.
    ========================================================== */
 :root{
-  --brand:#E85A24; --brand-dark:#C4400F; --brand-lite:#FF7A45; --brand-soft:#FFF1EA;
+  --brand:#D42027; --brand-dark:#9E1218; --brand-lite:#F04438; --brand-soft:#FCEBEA;
   --navy:#0F2740; --navy-2:#173A5E;
   --sos:#D92D20; --sos-dark:#A81E13; --sos-soft:#FEF0EE;
   --r:16px; --r-sm:10px; --r-lg:22px;
@@ -303,7 +303,7 @@ tbody tr:hover{background:var(--surface-2)}
 body{
   font-size:15px;letter-spacing:-.005em;
   background:
-    radial-gradient(1100px 620px at 82% -8%, rgba(232,90,36,.13), transparent 62%),
+    radial-gradient(1100px 620px at 82% -8%, rgba(212,32,39,.13), transparent 62%),
     radial-gradient(900px 560px at 10% 4%, rgba(23,58,94,.12), transparent 58%),
     linear-gradient(180deg,#F2F5F9 0%, #E7ECF2 100%);
   background-attachment:fixed;
@@ -315,7 +315,7 @@ body{
   -webkit-backdrop-filter:blur(14px) saturate(160%);
   border-bottom:1px solid rgba(255,255,255,.08);padding:10px 20px;
 }
-.demobar .tag{background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));box-shadow:0 2px 10px rgba(232,90,36,.4)}
+.demobar .tag{background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));box-shadow:0 2px 10px rgba(212,32,39,.4)}
 .rolesw button{transition:all .18s var(--ease)}
 .rolesw button.on{box-shadow:0 2px 8px rgba(0,0,0,.28)}
 
@@ -346,7 +346,7 @@ body{
 .appbar .back:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
 .logo .mark{
   background:linear-gradient(140deg,var(--brand-lite),var(--brand-dark));
-  box-shadow:0 3px 10px rgba(232,90,36,.35), inset 0 1px 0 rgba(255,255,255,.4);
+  box-shadow:0 3px 10px rgba(212,32,39,.35), inset 0 1px 0 rgba(255,255,255,.4);
   border-radius:9px;
 }
 
@@ -354,12 +354,12 @@ body{
 .hero{
   padding:30px 22px 26px;
   background:
-    radial-gradient(700px 300px at 88% -20%, rgba(232,90,36,.4), transparent 62%),
+    radial-gradient(700px 300px at 88% -20%, rgba(212,32,39,.4), transparent 62%),
     linear-gradient(158deg,#173A5E 0%, #0B1B2E 96%);
 }
 .hero::after{
   right:-70px;top:-70px;width:240px;height:240px;
-  background:radial-gradient(circle,rgba(232,90,36,.34),transparent 68%);filter:blur(6px);
+  background:radial-gradient(circle,rgba(212,32,39,.34),transparent 68%);filter:blur(6px);
 }
 .hero::before{
   content:'';position:absolute;inset:0;opacity:.5;
@@ -398,9 +398,9 @@ body{
 .act-main{
   border-color:transparent;color:#fff;
   background:linear-gradient(135deg,var(--brand-lite) 0%, var(--brand) 46%, var(--brand-dark) 100%);
-  box-shadow:0 6px 20px -6px rgba(232,90,36,.55), inset 0 1px 0 rgba(255,255,255,.28);
+  box-shadow:0 6px 20px -6px rgba(212,32,39,.55), inset 0 1px 0 rgba(255,255,255,.28);
 }
-.act-main:hover{box-shadow:0 12px 30px -8px rgba(232,90,36,.62), inset 0 1px 0 rgba(255,255,255,.3)}
+.act-main:hover{box-shadow:0 12px 30px -8px rgba(212,32,39,.62), inset 0 1px 0 rgba(255,255,255,.3)}
 .act-main .ai2{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.28)}
 .act-main .ad{color:rgba(255,255,255,.87)}
 .act-main .aa{color:rgba(255,255,255,.8)}
@@ -423,9 +423,9 @@ body{
 .btn:active:not(:disabled){transform:scale(.985)}
 .btn-primary{
   background:linear-gradient(135deg,var(--brand-lite),var(--brand) 55%,var(--brand-dark));
-  box-shadow:0 5px 18px -5px rgba(232,90,36,.55), inset 0 1px 0 rgba(255,255,255,.26);
+  box-shadow:0 5px 18px -5px rgba(212,32,39,.55), inset 0 1px 0 rgba(255,255,255,.26);
 }
-.btn-primary:hover:not(:disabled){box-shadow:0 10px 26px -7px rgba(232,90,36,.62);transform:translateY(-1px)}
+.btn-primary:hover:not(:disabled){box-shadow:0 10px 26px -7px rgba(212,32,39,.62);transform:translateY(-1px)}
 .btn-primary:disabled{background:#CBD3DB}
 .btn-wa{background:linear-gradient(135deg,#2FE577,#1FB457);color:#04361F;
   box-shadow:0 5px 18px -5px rgba(37,211,102,.5), inset 0 1px 0 rgba(255,255,255,.35)}
@@ -443,19 +443,19 @@ body{
 .sect{border-top:9px solid rgba(15,39,64,.045)}
 .sect h3{letter-spacing:.13em;font-size:10.5px}
 .sym{border-radius:15px;padding:16px 11px;transition:all .18s var(--ease)}
-.sym:hover{transform:translateY(-3px);box-shadow:0 12px 24px -12px rgba(232,90,36,.5)}
+.sym:hover{transform:translateY(-3px);box-shadow:0 12px 24px -12px rgba(212,32,39,.5)}
 .sym .si{font-size:27px}
 .qopt{border-radius:13px;transition:all .16s var(--ease)}
 .qopt:hover{transform:translateX(3px)}
 .result{
   border-radius:20px;
-  background:radial-gradient(500px 220px at 84% -10%, rgba(232,90,36,.34), transparent 62%),
+  background:radial-gradient(500px 220px at 84% -10%, rgba(212,32,39,.34), transparent 62%),
              linear-gradient(160deg,#173A5E,#0A1929);
   box-shadow:0 18px 40px -18px rgba(11,25,41,.6);
 }
-.b-match{background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));box-shadow:0 2px 8px rgba(232,90,36,.32)}
+.b-match{background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));box-shadow:0 2px 8px rgba(212,32,39,.32)}
 .alert{border-radius:12px}
-.inp:focus,.inp-sm:focus{border-color:var(--brand);box-shadow:0 0 0 3.5px rgba(232,90,36,.13)}
+.inp:focus,.inp-sm:focus{border-color:var(--brand);box-shadow:0 0 0 3.5px rgba(212,32,39,.13)}
 .radio-b{border-radius:11px;transition:all .16s var(--ease)}
 .wiz div{transition:background .3s var(--ease)}
 
@@ -534,7 +534,7 @@ body{
   transition:all .16s var(--ease);width:100%;
 }
 .rubb:hover{border-color:var(--brand);background:var(--brand-soft);transform:translateY(-2px)}
-.rubb.on{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 3px rgba(232,90,36,.1)}
+.rubb.on{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 3px rgba(212,32,39,.1)}
 .rubb .rbi{font-size:19px;display:block}
 .rubb .rbn{font-size:10.5px;font-weight:700;margin-top:4px;line-height:1.2}
 .chip{
@@ -563,7 +563,7 @@ body{
 .bub b{font-weight:750}
 .b-them{align-self:flex-start;background:var(--surface);border-bottom-left-radius:4px;border:1px solid var(--line)}
 .b-me{align-self:flex-end;background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));
-  color:#fff;border-bottom-right-radius:4px;border:none;box-shadow:0 3px 12px -3px rgba(232,90,36,.45)}
+  color:#fff;border-bottom-right-radius:4px;border:none;box-shadow:0 3px 12px -3px rgba(212,32,39,.45)}
 .b-me .bh{color:rgba(255,255,255,.8)}
 .b-mec{align-self:flex-start;background:#EEF4FA;border:1px solid #CFE1EF;border-bottom-left-radius:4px;color:#123A5C}
 .b-sys{
@@ -593,14 +593,14 @@ body{
   flex:1;border:1.5px solid var(--line);border-radius:20px;padding:9px 14px;font-size:14px;
   resize:none;min-height:40px;max-height:96px;outline:none;line-height:1.4;
 }
-.chat-in textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(232,90,36,.12)}
+.chat-in textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(212,32,39,.12)}
 .chat-in .cbtn{
   width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:17px;flex-shrink:0;
   border:1.5px solid var(--line);background:var(--surface);transition:all .16s var(--ease);
 }
 .chat-in .cbtn:hover{background:var(--surface-2);border-color:#C9D2DC}
 .chat-in .cbtn.send{background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));color:#fff;border:none;
-  box-shadow:0 4px 14px -4px rgba(232,90,36,.6)}
+  box-shadow:0 4px 14px -4px rgba(212,32,39,.6)}
 .chat-in .cbtn.send:disabled{background:#CBD3DB;box-shadow:none;cursor:not-allowed}
 .chat-hd{
   display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);
@@ -635,24 +635,52 @@ body{
 .panel{border-radius:20px;box-shadow:var(--sh-lg)}
 .side{background:linear-gradient(180deg,#12283F,#0A1725)}
 .side nav button.on{background:linear-gradient(135deg,var(--brand-lite),var(--brand-dark));
-  box-shadow:0 4px 14px -4px rgba(232,90,36,.6)}
+  box-shadow:0 4px 14px -4px rgba(212,32,39,.6)}
 .kpi{border-radius:14px;transition:transform .16s var(--ease),box-shadow .16s var(--ease)}
 .kpi:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
 table{border-radius:14px}
 .pcard{border-radius:16px}
+
+/* --- puerta de login unificada --- */
+.login-hero{padding:36px 22px 28px;text-align:center;color:#fff;position:relative;overflow:hidden;
+  background:radial-gradient(600px 300px at 50% -25%, rgba(212,32,39,.42), transparent 60%),
+             linear-gradient(158deg,#173A5E 0%,#0B1B2E 96%)}
+.login-hero::before{content:'';position:absolute;inset:0;opacity:.5;
+  background-image:radial-gradient(rgba(255,255,255,.09) 1px,transparent 1px);background-size:15px 15px;
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 78%);mask-image:linear-gradient(180deg,#000,transparent 78%)}
+.login-hero>*{position:relative;z-index:2}
+.login-hero .logo-xl{display:inline-flex;align-items:center;gap:12px;margin-bottom:22px}
+.login-hero .logo-xl .mark{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
+  font-weight:800;font-size:23px;color:#fff;letter-spacing:-.03em;
+  background:linear-gradient(140deg,var(--brand-lite),var(--brand-dark));
+  box-shadow:0 5px 16px rgba(212,32,39,.55), inset 0 1px 0 rgba(255,255,255,.4)}
+.login-hero .logo-xl .name{font-weight:800;font-size:23px;letter-spacing:-.025em;text-align:left;line-height:1}
+.login-hero .logo-xl .name small{display:block;font-size:8.5px;font-weight:700;letter-spacing:.16em;
+  color:#9FB6CE;text-transform:uppercase;margin-top:4px}
+.login-hero h2{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.15}
+.login-hero p{font-size:13px;color:#A9BDD3;margin-top:9px;line-height:1.5;max-width:280px;margin:9px auto 0}
+.demo-keys .dk-t{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:11px;text-align:center}
+.demo-keys .dk{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;
+  border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;background:var(--surface);
+  transition:all .16s var(--ease)}
+.demo-keys .dk:hover{border-color:var(--brand);background:var(--brand-soft);transform:translateX(3px)}
+.demo-keys .dk b{font-size:13.5px;font-weight:750}
+.demo-keys .dk span{font-size:12px;color:var(--ink-3)}
 </style>
 </head>
 <body>
 
 <div class="demobar">
   <span class="tag">Prototipo v3</span>
-  <span class="lbl">Ver como:</span>
+  <span class="lbl">👁 Demo · saltar login:</span>
   <div class="rolesw" id="rolesw">
     <button data-r="cliente">Cliente</button>
     <button data-r="mecanico">Mecánico</button>
     <button data-r="fratello">Panel Fratello</button>
   </div>
   <span class="spacer"></span>
+  <button class="reset" onclick="salir()">Ir al login</button>
   <button class="reset" onclick="resetDemo()">Reiniciar datos</button>
 </div>
 
@@ -942,6 +970,15 @@ const CLIENTES = [
        subida:'02/08/2026', titular:'Andrea S. Luque', verif:false}, casos:1},
 ];
 
+/* Cuentas de mecanico de la red (usuario + PIN). El rol se deduce de la cuenta. */
+const MECANICOS = [
+  {user:'ruben', pass:'taller1', nombre:'Rubén Ortiz', taller:'Taller San Martín'},
+];
+/* Cuentas internas de la casa de repuestos (mostrador). */
+const FRATELLO = [
+  {user:'mostrador', pass:'fratello', nombre:'Mostrador Fratello'},
+];
+
 /* Metricas de lealtad del mecanico.
    tasaPedido = pedidos / (casos - trabajos declarados sin repuesto)
    Es la metrica clave: mide si el taller usa la app solo para captar clientes. */
@@ -1200,6 +1237,7 @@ function seed(){ return [
 
 let S = {
   role:'cliente',
+  entered:false, demo:false, door:{id:'',pass:'',err:''},
   cli:'home', cliCaso:null, logged:false, user:null, nombre:'', tel:'',
   login:{pat:'',pass:'',err:''}, reg:{pat:'',pass:'',pass2:'',nombre:'',tel:'',tv:null,err:''},
   tri:null,                 // {cat, paso, resp:[], esp, urg, hint}
@@ -1222,6 +1260,7 @@ function toast(m,i='✓'){
 function resetDemo(){
   if(typeof _aux!=='undefined') clearInterval(_aux);
   S.casos=seed(); S.cli='home'; S.tri=null; S.form=null; S.logged=false; S.user=null;
+  S.entered=false; S.demo=false; S.door={id:'',pass:'',err:''};
   S.rep=null; S.aux=null; S.tallerElegido=null;
   S.mec='home'; S.fra='pedidos'; S.fraCaso=null; S.mecCaso=null; S.cliCaso=null;
   S.otraFecha=null; S.turnoDraft=null;
@@ -2983,13 +3022,62 @@ function fMarcas(){
 }
 
 /* ================= RENDER ================= */
+/* ================= PUERTA DE ENTRADA =================
+   Una sola pantalla de login. El rol se DEDUCE de la cuenta:
+   patente -> cliente, usuario de mecánico -> taller, usuario interno -> Fratello. */
+function vAcceso(){
+  const D=S.door;
+  return `<div class="phone"><div class="phone-status"><span>9:41</span><span>Fratello</span><span>▮▮ 87%</span></div>
+    <div class="body">
+      <div class="login-hero">
+        <div class="logo-xl"><div class="mark">F</div>
+          <div class="name">Fratello<small>Repuestos · Córdoba</small></div></div>
+        <h2>Entrá a tu cuenta</h2>
+        <p>Una sola puerta. Según con qué entres, te llevamos a tu parte.</p>
+      </div>
+      <div class="pad">
+        <div class="field"><label>Patente o usuario</label>
+          <input class="inp" style="letter-spacing:.03em;font-weight:650" value="${D.id}"
+            oninput="S.door.id=this.value" placeholder="AB123CD  ·  ruben  ·  mostrador"></div>
+        <div class="field"><label>Contraseña</label>
+          <input class="inp" type="password" value="${D.pass}" oninput="S.door.pass=this.value"
+            onkeydown="if(event.key==='Enter')hacerAcceso()" placeholder="••••••••"></div>
+        ${D.err?`<div class="alert a-crit" style="margin-bottom:14px"><span class="ai">⚠️</span><div>${D.err}</div></div>`:''}
+        <button class="btn btn-primary" onclick="hacerAcceso()">Ingresar</button>
+        <button class="btn btn-ghost" style="margin-top:10px" onclick="S.role='cliente';S.cli='home';S.entered=true;S.demo=true;render()">Explorar como invitado</button>
+        <div class="hr"></div>
+        <div class="demo-keys">
+          <div class="dk-t">🔑 Cuentas de prueba — tocá para autocompletar</div>
+          <button class="dk" onclick="S.door={id:'AB123CD',pass:'hilux2018',err:''};render()"><b>👤 Cliente</b><span class="mono">AB123CD · hilux2018</span></button>
+          <button class="dk" onclick="S.door={id:'ruben',pass:'taller1',err:''};render()"><b>🔧 Mecánico</b><span class="mono">ruben · taller1</span></button>
+          <button class="dk" onclick="S.door={id:'mostrador',pass:'fratello',err:''};render()"><b>🏢 Panel Fratello</b><span class="mono">mostrador · fratello</span></button>
+        </div>
+        <div style="height:20px"></div>
+      </div>
+    </div></div>`;
+}
+function hacerAcceso(){
+  const D=S.door, id=(D.id||'').trim();
+  const cli = CLIENTES.find(c=>c.pat===id.toUpperCase() && c.pass===D.pass);
+  if(cli){ S.role='cliente'; S.user=cli; S.logged=true; S.nombre=cli.nombre; S.tel=cli.tel; S.cli='home';
+    return entrar('Hola '+cli.nombre.split(' ')[0]+'!','👋'); }
+  const mec = MECANICOS.find(m=>m.user===id.toLowerCase() && m.pass===D.pass);
+  if(mec){ S.role='mecanico'; S.mecUser=mec; S.mec='home'; return entrar(mec.taller,'🔧'); }
+  const fra = FRATELLO.find(f=>f.user===id.toLowerCase() && f.pass===D.pass);
+  if(fra){ S.role='fratello'; S.fraUser=fra; S.fra='pedidos'; return entrar('Panel Fratello','🏢'); }
+  S.door.err='Usuario o contraseña incorrectos. Probá una cuenta de prueba.'; render();
+}
+function entrar(msg,ic){ S.entered=true; S.demo=false; S.door={id:'',pass:'',err:''}; render(); toast(msg,ic); }
+function salir(){ S.entered=false; S.demo=false; S.logged=false; S.user=null; S.door={id:'',pass:'',err:''}; render(); }
+
 function render(){
   document.querySelectorAll('#rolesw button').forEach(b=>b.classList.toggle('on',b.dataset.r===S.role));
-  $('#stage').innerHTML = S.role==='cliente'?vCliente():S.role==='mecanico'?vMecanico():vFratello();
+  $('#stage').innerHTML = !S.entered ? vAcceso()
+    : S.role==='cliente'?vCliente():S.role==='mecanico'?vMecanico():vFratello();
   /* el chat siempre abre en el último mensaje */
   document.querySelectorAll('.chat-scroll').forEach(el=>{ el.scrollTop = el.scrollHeight; });
 }
-document.querySelectorAll('#rolesw button').forEach(b=>{ b.onclick=()=>{S.role=b.dataset.r;render();}; });
+document.querySelectorAll('#rolesw button').forEach(b=>{ b.onclick=()=>{S.role=b.dataset.r;S.entered=true;S.demo=true;render();}; });
 render();
 </script>
 </body>
