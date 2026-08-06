@@ -732,6 +732,17 @@ svg{display:block}
 .hero p{font-size:13.5px;color:#AEC0D4;max-width:300px}
 /* filo dorado sutil bajo el logo del appbar */
 .logo .mark{box-shadow:0 3px 10px rgba(212,32,39,.4), inset 0 1px 0 rgba(255,255,255,.4), 0 0 0 1px rgba(235,178,74,.35)}
+
+/* --- vista a pantalla completa (sin envoltura de prototipo) --- */
+body{background:#fff}
+.demobar{display:none}
+.stage{padding:0}
+.phone{
+  width:100%; max-width:520px; margin:0 auto;
+  height:100vh; height:100dvh; min-height:100vh; min-height:100dvh;
+  border:none; border-radius:0; box-shadow:none;
+}
+.phone-status{display:none}
 </style>
 </head>
 <body>
@@ -1496,9 +1507,6 @@ function cHome(){
     <div class="sect"><h3>Dónde estamos</h3>
       <div class="card"><div class="card-t">Casa central</div>
         <div class="card-s">Av. Juan B. Justo 3200 · Alta Córdoba<br>Lun a Vie 8–18 · Sáb 8–13<br>WhatsApp +54 351 000-0000</div></div>
-    </div>
-    <div style="padding:20px 18px 30px;text-align:center;color:var(--ink-3);font-size:11.5px;line-height:1.6;border-top:8px solid var(--bg)">
-      Estás navegando sin cuenta.<br>Solo te pedimos nombre y celular cuando pedís el turno.
     </div>
   </div>`;
 }
